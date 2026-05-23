@@ -121,7 +121,6 @@
 <script>
   // ── Auth guard ──
   (async () => {
-    // Retry session check (Supabase needs a moment to restore)
     let session = null;
     for (let i = 0; i < 5; i++) {
       const { data } = await supabaseClient.auth.getSession();
@@ -130,12 +129,64 @@
       await new Promise(r => setTimeout(r, 300));
     }
     if (!session) { window.location.href = '/index.html'; return; }
-    document.getElementById('user-email').textContent = session.user.email;
+
+    const user = session.user;
+    document.getElementById('user-email').textContent = user.email;
+
+    // Check for Stripe return (successful payment)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('session')) {
+      showToast('Payment successful! Your plan is being upgraded...', 'info');
+      // Wait a moment for webhook to process, then reload
+      setTimeout(() => {
+        window.location.href = '/dashboard.html';
+      }, 3000);
+      return;
+    }
+
+    await loadProfile(user);
     loadDashboard();
   })();
 
+  let userProfile = { subscription_tier: 'free', scans_limit: 1, scans_used_this_month: 0 };
+
+  async function loadProfile(user) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('subscription_tier, scans_limit, scans_used_this_month')
+        .eq('id', user.id)
+        .single();
+
+      if (data && !error) {
+        userProfile = data;
+      }
+    } catch(e) {
+      // Profile might not exist yet — use defaults
+    }
+
+    // Update UI
+    const tierNames = { free: 'Free', side_hustler: 'Side Hustler', power_freelancer: 'Pro', agency: 'Agency' };
+    const tierColors = { free: 'bg-gray-800 text-gray-400', side_hustler: 'bg-brand-500/20 text-brand-400', power_freelancer: 'bg-purple-500/20 text-purple-400', agency: 'bg-amber-500/20 text-amber-400' };
+
+    const badge = document.getElementById('plan-badge');
+    badge.textContent = tierNames[userProfile.subscription_tier] || 'Free';
+    badge.className = `text-xs px-2 py-1 rounded-full ${tierColors[userProfile.subscription_tier] || tierColors.free}`;
+
+    document.getElementById('scans-used').textContent = userProfile.scans_used_this_month;
+    document.getElementById('scans-limit').textContent = userProfile.scans_limit;
+
+    // Show/hide upgrade banner
+    const banner = document.getElementById('upgrade-banner');
+    if (userProfile.subscription_tier !== 'free') {
+      banner.innerHTML = `
+        <h3 class="font-bold text-white mb-1">✅ You're on the ${tierNames[userProfile.subscription_tier]} plan</h3>
+        <p class="text-gray-400 text-sm">${userProfile.scans_limit} scans/month. <a href="/index.html#pricing" class="text-brand-500 hover:text-brand-400">Upgrade</a> for more.</p>
+      `;
+    }
+  }
+
   async function loadDashboard() {
-    // Load stats and history from local storage for now (MVP — Supabase DB later)
     const scans = JSON.parse(localStorage.getItem('contractlens_scans') || '[]');
     const monthScans = scans.filter(s => {
       const d = new Date(s.date);
@@ -143,8 +194,6 @@
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
 
-    document.getElementById('scans-used').textContent = scans.length;
-    document.getElementById('scans-limit').textContent = '5'; // Free tier
     document.getElementById('scans-month').textContent = monthScans.length;
     document.getElementById('high-risks').textContent = scans.filter(s => s.risk === 'high').length;
 
