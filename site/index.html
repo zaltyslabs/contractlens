@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContractLens — Understand Every Contract You Sign</title>
+<meta name="description" content="AI-powered contract analysis for freelancers. Upload any contract and get a plain-English summary in minutes.">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+        }
+      }
+    }
+  }
+</script>
+<style>
+  .gradient-text { background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); }
+  @media (prefers-color-scheme: light) {
+    .glass { background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.06); }
+  }
+</style>
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen">
+
+<!-- NAV -->
+<nav class="border-b border-gray-800">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="text-lg font-bold text-white">📋 ContractLens</a>
+    <div class="flex gap-3 items-center">
+      <span id="nav-user" class="hidden text-sm text-gray-400"></span>
+      <button onclick="openAuth('signup')" id="btn-signup" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Get Started Free</button>
+      <button onclick="openAuth('signin')" id="btn-signin" class="text-gray-300 hover:text-white text-sm font-medium transition">Sign In</button>
+      <button onclick="signOut()" id="btn-signout" class="hidden text-gray-300 hover:text-white text-sm transition">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="max-w-4xl mx-auto px-4 pt-16 pb-12 text-center">
+  <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-4">
+    <span class="gradient-text">Understand Every Contract</span><br>
+    <span class="text-white">You Sign</span>
+  </h1>
+  <p class="text-lg text-gray-400 max-w-xl mx-auto mb-8">
+    Upload any contract. Get a plain-English summary in minutes.
+    Know what you're actually signing — without paying a lawyer $500.
+  </p>
+  <div class="flex gap-3 justify-center flex-wrap">
+    <button onclick="openAuth('signup')" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-xl font-bold text-lg transition shadow-lg shadow-brand-500/25">Try Free →</button>
+    <button onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})" class="border border-gray-700 hover:border-gray-500 text-gray-300 px-6 py-3 rounded-xl font-semibold text-lg transition">View Pricing</button>
+  </div>
+  <p class="text-xs text-gray-600 mt-4">No credit card required. Free first scan.</p>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="max-w-5xl mx-auto px-4 py-12">
+  <h2 class="text-2xl font-bold text-center text-white mb-10">How It Works</h2>
+  <div class="grid md:grid-cols-3 gap-6">
+    <div class="glass rounded-2xl p-6 text-center">
+      <div class="text-3xl mb-3">📤</div>
+      <h3 class="font-bold text-white mb-2">1. Upload</h3>
+      <p class="text-gray-400 text-sm">Drag and drop any PDF, DOCX, or TXT contract. We extract the text securely.</p>
+    </div>
+    <div class="glass rounded-2xl p-6 text-center">
+      <div class="text-3xl mb-3">🤖</div>
+      <h3 class="font-bold text-white mb-2">2. Analyze</h3>
+      <p class="text-gray-400 text-sm">Our AI checks 6 danger zones — payment terms, IP, non-competes, and more.</p>
+    </div>
+    <div class="glass rounded-2xl p-6 text-center">
+      <div class="text-3xl mb-3">📋</div>
+      <h3 class="font-bold text-white mb-2">3. Understand</h3>
+      <p class="text-gray-400 text-sm">A clear, color-coded report with specific recommendations lands in your inbox.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DANGER ZONES -->
+<section class="max-w-5xl mx-auto px-4 py-12">
+  <h2 class="text-2xl font-bold text-center text-white mb-2">What We Check</h2>
+  <p class="text-center text-gray-500 mb-8 text-sm">Six danger zones. Every contract. Every time.</p>
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div class="border border-gray-800 rounded-xl p-4"><span class="text-xl">💰</span><h4 class="font-semibold text-white text-sm mt-1">Payment Terms</h4><p class="text-gray-500 text-xs mt-1">Net-30? Late fees? Clawbacks?</p></div>
+    <div class="border border-gray-800 rounded-xl p-4"><span class="text-xl">🔒</span><h4 class="font-semibold text-white text-sm mt-1">IP & Ownership</h4><p class="text-gray-500 text-xs mt-1">Who owns your work?</p></div>
+    <div class="border border-gray-800 rounded-xl p-4"><span class="text-xl">🚫</span><h4 class="font-semibold text-white text-sm mt-1">Non-Compete</h4><p class="text-gray-500 text-xs mt-1">Can you work elsewhere?</p></div>
+    <div class="border border-gray-800 rounded-xl p-4"><span class="text-xl">⏰</span><h4 class="font-semibold text-white text-sm mt-1">Termination</h4><p class="text-gray-500 text-xs mt-1">Exit clauses, auto-renewal</p></div>
+    <div class="border border-gray-800 rounded-xl p-4"><span class="text-xl">🛡️</span><h4 class="font-semibold text-white text-sm mt-1">Indemnification</h4><p class="text-gray-500 text-xs mt-1">Who pays if things go wrong?</p></div>
+    <div class="border border-gray-800 rounded-xl p-4"><span class="text-xl">⚖️</span><h4 class="font-semibold text-white text-sm mt-1">Liability Caps</h4><p class="text-gray-500 text-xs mt-1">How much can they sue for?</p></div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="max-w-5xl mx-auto px-4 py-12">
+  <h2 class="text-2xl font-bold text-center text-white mb-2">Simple Pricing</h2>
+  <p class="text-center text-gray-500 mb-8 text-sm">Start free. Upgrade when you need more.</p>
+  <div class="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+
+    <!-- Free -->
+    <div class="border border-gray-800 rounded-2xl p-6 text-center flex flex-col">
+      <h3 class="font-bold text-white text-lg">Free</h3>
+      <div class="text-4xl font-extrabold text-white my-3">$0</div>
+      <ul class="text-gray-400 text-sm space-y-2 mb-6 text-left">
+        <li>✓ 1 contract scan</li>
+        <li>✓ Full danger zone analysis</li>
+        <li>✓ HTML report</li>
+        <li>✓ Email delivery</li>
+      </ul>
+      <button onclick="openAuth('signup')" class="mt-auto w-full border border-brand-500 text-brand-500 hover:bg-brand-500 hover:text-white py-2.5 rounded-lg font-semibold text-sm transition">Get Started</button>
+    </div>
+
+    <!-- Side Hustler -->
+    <div class="border-2 border-brand-500 rounded-2xl p-6 text-center flex flex-col relative">
+      <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-full">Most Popular</span>
+      <h3 class="font-bold text-white text-lg">Side Hustler</h3>
+      <div class="text-4xl font-extrabold text-white my-3">$12<span class="text-lg font-normal text-gray-400">/mo</span></div>
+      <ul class="text-gray-400 text-sm space-y-2 mb-6 text-left">
+        <li>✓ 5 contract scans / month</li>
+        <li>✓ Full analysis</li>
+        <li>✓ HTML + email delivery</li>
+        <li>✓ Scan history</li>
+        <li>✓ Priority processing</li>
+      </ul>
+      <button onclick="openAuth('signup')" class="mt-auto w-full bg-brand-500 hover:bg-brand-600 text-white py-2.5 rounded-lg font-semibold text-sm transition">Subscribe — $12/mo</button>
+    </div>
+
+    <!-- Power Freelancer -->
+    <div class="border border-gray-800 rounded-2xl p-6 text-center flex flex-col">
+      <h3 class="font-bold text-white text-lg">Power Freelancer</h3>
+      <div class="text-4xl font-extrabold text-white my-3">$25<span class="text-lg font-normal text-gray-400">/mo</span></div>
+      <ul class="text-gray-400 text-sm space-y-2 mb-6 text-left">
+        <li>✓ 20 contract scans / month</li>
+        <li>✓ Everything in Side Hustler</li>
+        <li>✓ Redline suggestions</li>
+        <li>✓ Compare mode</li>
+        <li>✓ Contract templates</li>
+      </ul>
+      <button onclick="openAuth('signup')" class="mt-auto w-full border border-brand-500 text-brand-500 hover:bg-brand-500 hover:text-white py-2.5 rounded-lg font-semibold text-sm transition">Subscribe — $25/mo</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t border-gray-800 mt-16 py-8">
+  <div class="max-w-5xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+    <p class="text-gray-600 text-sm">© 2026 ContractLens. Not legal advice.</p>
+    <div class="flex gap-6 text-sm">
+      <a href="/tos.html" class="text-gray-500 hover:text-gray-300 transition">Terms of Service</a>
+      <a href="/privacy.html" class="text-gray-500 hover:text-gray-300 transition">Privacy Policy</a>
+      <a href="mailto:support@contractlens.io" class="text-gray-500 hover:text-gray-300 transition">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- AUTH MODAL -->
+<div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md">
+    <div class="flex justify-between items-center mb-4">
+      <h3 id="auth-title" class="text-lg font-bold text-white">Sign Up</h3>
+      <button onclick="closeAuth()" class="text-gray-500 hover:text-white text-xl">&times;</button>
+    </div>
+
+    <div class="space-y-3">
+      <input id="auth-email" type="email" placeholder="you@email.com" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-brand-500">
+      <input id="auth-password" type="password" placeholder="Password (min 8 chars)" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-brand-500">
+    </div>
+
+    <div id="auth-error" class="hidden text-red-400 text-sm mt-3"></div>
+    <div id="auth-success" class="hidden text-green-400 text-sm mt-3"></div>
+
+    <button id="auth-submit" onclick="handleAuth()" class="w-full mt-4 bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-lg font-bold transition">Create Account</button>
+
+    <p class="text-center text-gray-500 text-xs mt-3">
+      <span id="auth-switch-text">Already have an account?</span>
+      <button id="auth-switch-btn" onclick="toggleAuthMode()" class="text-brand-500 hover:text-brand-400 font-medium">Sign In</button>
+    </p>
+
+    <div class="border-t border-gray-800 mt-4 pt-4">
+      <p class="text-xs text-gray-600 text-center">
+        By signing up you agree to our <a href="/tos.html" class="text-brand-500">Terms</a> and <a href="/privacy.html" class="text-brand-500">Privacy Policy</a>.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  let authMode = 'signup';
+
+  function openAuth(mode) {
+    authMode = mode;
+    document.getElementById('auth-modal').classList.remove('hidden');
+    document.getElementById('auth-title').textContent = mode === 'signup' ? 'Create Account' : 'Sign In';
+    document.getElementById('auth-submit').textContent = mode === 'signup' ? 'Create Account' : 'Sign In';
+    document.getElementById('auth-switch-text').textContent = mode === 'signup' ? 'Already have an account?' : "Don't have an account?";
+    document.getElementById('auth-switch-btn').textContent = mode === 'signup' ? 'Sign In' : 'Sign Up';
+    document.getElementById('auth-error').classList.add('hidden');
+    document.getElementById('auth-success').classList.add('hidden');
+  }
+
+  function closeAuth() {
+    document.getElementById('auth-modal').classList.add('hidden');
+  }
+
+  function toggleAuthMode() {
+    openAuth(authMode === 'signup' ? 'signin' : 'signup');
+  }
+
+  async function handleAuth() {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const errEl = document.getElementById('auth-error');
+    const okEl = document.getElementById('auth-success');
+    errEl.classList.add('hidden');
+    okEl.classList.add('hidden');
+
+    if (!email) { errEl.textContent = 'Please enter your email.'; errEl.classList.remove('hidden'); return; }
+    if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.remove('hidden'); return; }
+
+    try {
+      if (authMode === 'signup') {
+        await signUp(email, password);
+        okEl.textContent = 'Check your email for a confirmation link!';
+        okEl.classList.remove('hidden');
+      } else {
+        await signIn(email, password);
+        window.location.href = '/dashboard.html';
+      }
+    } catch (e) {
+      errEl.textContent = e.message || 'Authentication failed.';
+      errEl.classList.remove('hidden');
+    }
+  }
+
+  // Check auth on load
+  (async () => {
+    const user = await getUser();
+    if (user) {
+      document.getElementById('btn-signup').classList.add('hidden');
+      document.getElementById('btn-signin').classList.add('hidden');
+      document.getElementById('btn-signout').classList.remove('hidden');
+      document.getElementById('nav-user').textContent = user.email;
+      document.getElementById('nav-user').classList.remove('hidden');
+    }
+  })();
+
+  // Close modal on escape
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAuth(); });
+  document.getElementById('auth-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('auth-modal')) closeAuth();
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — ContractLens</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5' }
+        }
+      }
+    }
+  }
+</script>
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen">
+
+<nav class="border-b border-gray-800">
+  <div class="max-w-4xl mx-auto px-4 py-3">
+    <a href="/" class="text-lg font-bold text-white">📋 ContractLens</a>
+  </div>
+</nav>
+
+<main class="max-w-3xl mx-auto px-4 py-12">
+  <h1 class="text-3xl font-bold text-white mb-2">Privacy Policy</h1>
+  <p class="text-gray-500 text-sm mb-8">Last updated: May 2026</p>
+
+  <div class="prose prose-invert max-w-none space-y-6 text-gray-300 text-sm leading-relaxed">
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">1. Our Commitment to Privacy</h2>
+      <p>ContractLens takes your privacy seriously. This policy explains what data we collect, how we use it, and your rights. <strong class="text-white">We do not sell your data. We do not retain your contracts.</strong></p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">2. Information We Collect</h2>
+      <ul class="list-disc ml-5 space-y-1">
+        <li><strong class="text-white">Account Information:</strong> Email address and authentication credentials (managed by Supabase Auth).</li>
+        <li><strong class="text-white">Contract Documents:</strong> Files you upload for analysis (PDF, DOCX, TXT). These are processed in memory and <strong>deleted immediately after analysis is complete.</strong></li>
+        <li><strong class="text-white">Analysis Results:</strong> The AI-generated summaries and risk assessments are retained so you can access your report history.</li>
+        <li><strong class="text-white">Usage Data:</strong> Anonymous analytics (page views, feature usage) to improve the Service.</li>
+        <li><strong class="text-white">Payment Information:</strong> Processed by Stripe. We do not store your credit card details.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">3. How We Process Your Contracts</h2>
+      <p>When you upload a contract for analysis:</p>
+      <ol class="list-decimal ml-5 space-y-1 mt-1">
+        <li>The file is validated for safety (type, size, content).</li>
+        <li>Text is extracted from the document.</li>
+        <li>The extracted text is sanitized to remove any executable code or scripts.</li>
+        <li>The text is sent to an AI language model for analysis.</li>
+        <li>The analysis result is saved; <strong>the original file and extracted text are permanently deleted.</strong></li>
+      </ol>
+      <p class="mt-2">No human reads your contracts. Processing is fully automated.</p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">4. Data Storage and Security</h2>
+      <p>Account data and analysis results are stored in Supabase, which provides enterprise-grade security including encryption at rest and in transit. We implement file validation and sanitization to prevent malicious uploads. All uploaded files are sandboxed during processing and wiped after completion.</p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">5. Third-Party Services</h2>
+      <p>We use the following third-party services:</p>
+      <ul class="list-disc ml-5 space-y-1">
+        <li><strong class="text-white">Supabase</strong> — Authentication and database hosting.</li>
+        <li><strong class="text-white">Stripe</strong> — Payment processing.</li>
+        <li><strong class="text-white">AI Language Models</strong> — Contract analysis (text is sent to API; providers do not train on our data).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">6. Your Rights</h2>
+      <p>You have the right to: (a) access your personal data; (b) request deletion of your account and data; (c) export your analysis history; (d) withdraw consent at any time. To exercise these rights, contact us at the email below.</p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">7. Data Retention</h2>
+      <p>Analysis results are retained for the life of your account. Uploaded contract files are deleted immediately after processing. If you delete your account, all associated data is permanently removed within 30 days.</p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">8. Cookies</h2>
+      <p>We use essential cookies for authentication (via Supabase). We do not use tracking cookies or third-party analytics cookies.</p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">9. Children's Privacy</h2>
+      <p>The Service is not intended for users under 18. We do not knowingly collect data from children.</p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">10. Changes to This Policy</h2>
+      <p>We may update this policy. Material changes will be communicated via email. Continued use after changes constitutes acceptance.</p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-bold text-white mb-2">11. Contact</h2>
+      <p>Privacy questions? Contact us at <a href="mailto:privacy@contractlens.io" class="text-brand-500 hover:text-brand-400">privacy@contractlens.io</a>.</p>
+    </section>
+
+  </div>
+</main>
+
+<footer class="border-t border-gray-800 py-8 text-center text-gray-600 text-xs">
+  <a href="/" class="hover:text-gray-400">Home</a> &middot;
+  <a href="/tos.html" class="hover:text-gray-400 ml-2">Terms of Service</a>
+</footer>
+
+</body>
+</html>

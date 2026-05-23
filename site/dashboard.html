@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — ContractLens</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+        }
+      }
+    }
+  }
+</script>
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen">
+
+<!-- NAV -->
+<nav class="border-b border-gray-800">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="text-lg font-bold text-white">📋 ContractLens</a>
+    <div class="flex gap-3 items-center">
+      <span id="user-email" class="text-sm text-gray-400"></span>
+      <span id="plan-badge" class="text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-400">Free</span>
+      <button onclick="signOut()" class="text-gray-400 hover:text-white text-sm transition">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-4 py-8">
+
+  <!-- STATS -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="border border-gray-800 rounded-xl p-4">
+      <div class="text-gray-500 text-xs uppercase mb-1">Scans Used</div>
+      <div class="text-2xl font-bold text-white" id="scans-used">—</div>
+    </div>
+    <div class="border border-gray-800 rounded-xl p-4">
+      <div class="text-gray-500 text-xs uppercase mb-1">Plan Limit</div>
+      <div class="text-2xl font-bold text-white" id="scans-limit">—</div>
+    </div>
+    <div class="border border-gray-800 rounded-xl p-4">
+      <div class="text-gray-500 text-xs uppercase mb-1">This Month</div>
+      <div class="text-2xl font-bold text-white" id="scans-month">—</div>
+    </div>
+    <div class="border border-gray-800 rounded-xl p-4">
+      <div class="text-gray-500 text-xs uppercase mb-1">High Risks Found</div>
+      <div class="text-2xl font-bold text-red-400" id="high-risks">—</div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div id="upload-zone" class="border-2 border-dashed border-gray-700 hover:border-brand-500 rounded-2xl p-10 text-center mb-8 transition cursor-pointer">
+    <div class="text-4xl mb-3">📤</div>
+    <h3 class="text-lg font-bold text-white mb-1">Upload a Contract</h3>
+    <p class="text-gray-500 text-sm mb-3">Drag and drop a PDF, DOCX, or TXT file here</p>
+    <input type="file" id="file-input" accept=".pdf,.docx,.txt,.md,.text" class="hidden" onchange="handleUpload(this.files[0])">
+    <button onclick="document.getElementById('file-input').click()" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition">Choose File</button>
+    <p class="text-gray-600 text-xs mt-2">Max 20MB. Files are deleted after processing.</p>
+  </div>
+
+  <!-- UPLOAD STATUS -->
+  <div id="upload-status" class="hidden border border-gray-800 rounded-xl p-4 mb-8">
+    <div class="flex items-center gap-3">
+      <div id="upload-spinner" class="animate-spin w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full"></div>
+      <div>
+        <p class="text-white font-medium" id="upload-filename"></p>
+        <p class="text-gray-500 text-sm" id="upload-msg">Processing...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <h2 class="text-lg font-bold text-white mb-4">Scan History</h2>
+  <div class="border border-gray-800 rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-900 text-gray-500 text-xs uppercase">
+        <tr>
+          <th class="text-left px-4 py-3">Document</th>
+          <th class="text-left px-4 py-3 hidden md:table-cell">Date</th>
+          <th class="text-left px-4 py-3">Risk</th>
+          <th class="text-left px-4 py-3">Status</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody id="history-body">
+        <tr>
+          <td colspan="5" class="px-4 py-8 text-center text-gray-600">No scans yet. Upload your first contract above.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- UPGRADE BANNER -->
+  <div id="upgrade-banner" class="mt-8 border border-brand-500/30 bg-brand-500/5 rounded-xl p-6 text-center">
+    <h3 class="font-bold text-white mb-1">Need More Scans?</h3>
+    <p class="text-gray-400 text-sm mb-4">Upgrade to Side Hustler ($12/mo) for 5 scans/month or Power Freelancer ($25/mo) for 20.</p>
+    <a href="/#pricing" class="inline-block bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition">View Plans</a>
+  </div>
+
+</main>
+
+<script src="app.js"></script>
+<script>
+  // ── Auth guard ──
+  (async () => {
+    const user = await getUser();
+    if (!user) { window.location.href = '/index.html'; return; }
+    document.getElementById('user-email').textContent = user.email;
+    loadDashboard();
+  })();
+
+  async function loadDashboard() {
+    // Load stats and history from local storage for now (MVP — Supabase DB later)
+    const scans = JSON.parse(localStorage.getItem('contractlens_scans') || '[]');
+    const monthScans = scans.filter(s => {
+      const d = new Date(s.date);
+      const now = new Date();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+
+    document.getElementById('scans-used').textContent = scans.length;
+    document.getElementById('scans-limit').textContent = '5'; // Free tier
+    document.getElementById('scans-month').textContent = monthScans.length;
+    document.getElementById('high-risks').textContent = scans.filter(s => s.risk === 'high').length;
+
+    // Render history
+    const tbody = document.getElementById('history-body');
+    if (scans.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">No scans yet. Upload your first contract above.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = scans.reverse().slice(0, 20).map(s => `
+      <tr class="border-t border-gray-800 hover:bg-gray-900/50">
+        <td class="px-4 py-3">
+          <div class="font-medium text-white text-sm">${escHtml(s.filename || 'Untitled')}</div>
+          <div class="text-gray-600 text-xs md:hidden">${s.date ? new Date(s.date).toLocaleDateString() : ''}</div>
+        </td>
+        <td class="px-4 py-3 text-gray-400 hidden md:table-cell">${s.date ? new Date(s.date).toLocaleDateString() : ''}</td>
+        <td class="px-4 py-3">
+          <span class="text-xs font-bold uppercase ${s.risk === 'high' ? 'text-red-400' : s.risk === 'medium' ? 'text-amber-400' : 'text-green-400'}">${s.risk || '?'}</span>
+        </td>
+        <td class="px-4 py-3">
+          <span class="text-xs ${s.status === 'done' ? 'text-green-400' : 'text-amber-400'}">${s.status === 'done' ? 'Complete' : 'Processing'}</span>
+        </td>
+        <td class="px-4 py-3">
+          ${s.status === 'done' ? `<a href="${s.reportUrl || '#'}" class="text-brand-500 hover:text-brand-400 text-xs font-medium">View →</a>` : '<span class="text-gray-700 text-xs">—</span>'}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function handleUpload(file) {
+    if (!file) return;
+    const zone = document.getElementById('upload-zone');
+    const status = document.getElementById('upload-status');
+    zone.classList.add('hidden');
+    status.classList.remove('hidden');
+    document.getElementById('upload-filename').textContent = file.name;
+
+    // Simulate upload + processing
+    document.getElementById('upload-msg').textContent = 'Uploading...';
+
+    // Store scan record
+    const scans = JSON.parse(localStorage.getItem('contractlens_scans') || '[]');
+    const newScan = {
+      id: Date.now().toString(),
+      filename: file.name,
+      date: new Date().toISOString(),
+      risk: 'pending',
+      status: 'processing',
+      reportUrl: null
+    };
+    scans.push(newScan);
+    localStorage.setItem('contractlens_scans', JSON.stringify(scans));
+
+    // Simulate processing delay then redirect to result
+    setTimeout(() => {
+      newScan.status = 'done';
+      newScan.risk = ['low', 'medium', 'high'][Math.floor(Math.random() * 3)]; // Placeholder
+      newScan.reportUrl = '#';
+      localStorage.setItem('contractlens_scans', JSON.stringify(scans));
+
+      document.getElementById('upload-msg').textContent = 'Analysis complete!';
+      document.getElementById('upload-spinner').classList.add('hidden');
+      showToast('Report ready! Check your email.', 'success');
+
+      setTimeout(() => {
+        status.classList.add('hidden');
+        zone.classList.remove('hidden');
+        loadDashboard();
+      }, 2000);
+    }, 3000);
+  }
+
+  // Drag and drop
+  const dropZone = document.getElementById('upload-zone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-brand-500'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-brand-500'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('border-brand-500');
+    const file = e.dataTransfer.files[0];
+    if (file) handleUpload(file);
+  });
+
+  function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+</script>
+
+</body>
+</html>
