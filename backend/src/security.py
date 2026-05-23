@@ -190,10 +190,10 @@ def delete_source_after_processing(filepath: str | Path) -> bool:
         return False
 
     try:
-        # Overwrite with zeros (simple, not DoD-level but good enough)
+        # Overwrite with zeros before deletion for privacy
         size = filepath.stat().st_size
         with open(filepath, "wb") as f:
-            f.write(b"\x00" * min(size, 1024 * 1024))  # 1MB max overwrite
+            f.write(b"\x00" * size)  # overwrite entire file
         filepath.unlink()
         return True
     except OSError:

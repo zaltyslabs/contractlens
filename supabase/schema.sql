@@ -61,11 +61,32 @@ CREATE POLICY "Users can view own profile"
   ON public.profiles FOR SELECT
   USING (auth.uid() = id);
 
--- Profiles: users can update their own profile (but not subscription tier)
+-- Profiles: users can update their own profile (billing columns protected by trigger)
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
+
+-- ── Prevent self-upgrade: billing columns only writable by service_role ────
+CREATE OR REPLACE FUNCTION public.prevent_billing_self_update()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF current_setting('role') != 'service_role' THEN
+    IF NEW.subscription_tier IS DISTINCT FROM OLD.subscription_tier
+       OR NEW.scans_limit IS DISTINCT FROM OLD.scans_limit
+       OR NEW.stripe_customer_id IS DISTINCT FROM OLD.stripe_customer_id
+       OR NEW.stripe_subscription_id IS DISTINCT FROM OLD.stripe_subscription_id THEN
+      RAISE EXCEPTION 'Billing columns can only be updated by the service role';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_prevent_billing_self_update ON public.profiles;
+CREATE TRIGGER trg_prevent_billing_self_update
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_billing_self_update();
 
 -- Scans: users can view only their own scans
 CREATE POLICY "Users can view own scans"
@@ -89,10 +110,18 @@ CREATE INDEX IF NOT EXISTS idx_scans_created_at ON public.scans(created_at DESC)
 CREATE INDEX IF NOT EXISTS idx_scans_status ON public.scans(status);
 CREATE INDEX IF NOT EXISTS idx_profiles_subscription ON public.profiles(subscription_tier);
 
--- ── Monthly reset function (run via cron or edge function) ─────────────────
+-- ── Monthly reset function (run via cron or service-role edge function) ─────
 CREATE OR REPLACE FUNCTION public.reset_monthly_scans()
 RETURNS void AS $$
 BEGIN
-  UPDATE public.profiles SET scans_used_this_month = 0;
+  -- Guard: only reset profiles that actually have scans used (idempotency)
+  -- Also prevents double-reset from cron misconfiguration
+  UPDATE public.profiles SET scans_used_this_month = 0
+  WHERE scans_used_this_month > 0;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Lock down: only service_role can execute this function
+REVOKE EXECUTE ON FUNCTION public.reset_monthly_scans() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.reset_monthly_scans() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.reset_monthly_scans() FROM anon;

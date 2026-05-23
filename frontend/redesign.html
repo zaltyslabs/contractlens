@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-accent="indigo" data-density="comfortable">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContractLens — Redesign Preview</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* ─── Design tokens ─────────────────────────────── */
+:root {
+  --bg:       #030712;
+  --surf:     #0d1117;
+  --surf-2:   #161b22;
+  --surf-3:   #21262d;
+  --border:   rgba(255,255,255,0.07);
+  --border-2: rgba(255,255,255,0.12);
+  --text:     #e6edf3;
+  --text-2:   #c9d1d9;
+  --text-3:   #8b949e;
+  --text-4:   #6e7681;
+  --text-5:   #484f58;
+
+  --accent:       #6366f1;
+  --accent-h:     #4f46e5;
+  --accent-dim:   rgba(99,102,241,0.12);
+  --accent-glow:  rgba(99,102,241,0.25);
+  --accent-text:  #818cf8;
+
+  --high:    #ef4444; --high-bg:  rgba(239,68,68,0.1);
+  --med:     #f59e0b; --med-bg:   rgba(245,158,11,0.1);
+  --low:     #22c55e; --low-bg:   rgba(34,197,94,0.1);
+
+  --r:    10px;
+  --r-sm:  6px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+}
+[data-theme="light"] {
+  --bg:       #ffffff;
+  --surf:     #f6f8fa;
+  --surf-2:   #eaeef2;
+  --surf-3:   #d0d7de;
+  --border:   rgba(0,0,0,0.08);
+  --border-2: rgba(0,0,0,0.14);
+  --text:     #1c2128;
+  --text-2:   #24292f;
+  --text-3:   #57606a;
+  --text-4:   #6e7781;
+  --text-5:   #8c959f;
+}
+[data-accent="purple"] { --accent:#a855f7; --accent-h:#9333ea; --accent-dim:rgba(168,85,247,0.12); --accent-glow:rgba(168,85,247,0.25); --accent-text:#c084fc; }
+[data-accent="rose"]   { --accent:#f43f5e; --accent-h:#e11d48; --accent-dim:rgba(244,63,94,0.12);  --accent-glow:rgba(244,63,94,0.25);  --accent-text:#fb7185; }
+[data-accent="emerald"]{ --accent:#10b981; --accent-h:#059669; --accent-dim:rgba(16,185,129,0.12); --accent-glow:rgba(16,185,129,0.25); --accent-text:#34d399; }
+
+[data-density="compact"] { --space-card:16px; --space-section:40px; font-size:14px; }
+[data-density="comfortable"] { --space-card:24px; --space-section:72px; }
+
+/* ─── Reset & base ──────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  transition: background 0.25s, color 0.25s;
+  min-height: 100vh;
+}
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+
+/* ─── Nav ───────────────────────────────────────── */
+.cl-nav {
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.cl-nav-inner {
+  max-width: 1100px; margin: 0 auto;
+  padding: 0 20px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+}
+.cl-logo {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.3px;
+}
+.cl-logo svg { flex-shrink: 0; }
+.nav-actions { display: flex; align-items: center; gap: 8px; }
+.nav-link {
+  color: var(--text-3); font-size: 14px; font-weight: 500;
+  padding: 8px 12px; border-radius: var(--r-sm);
+  transition: color 0.15s, background 0.15s;
+  min-height: 44px; display: flex; align-items: center;
+}
+.nav-link:hover { color: var(--text); background: var(--surf-2); }
+
+/* ─── Buttons ───────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 10px 20px;
+  border-radius: var(--r); font-size: 14px; font-weight: 600;
+  min-height: 44px; transition: all 0.15s; white-space: nowrap;
+}
+.btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 0 0 0 var(--accent-glow);
+}
+.btn-primary:hover {
+  background: var(--accent-h);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+  transform: translateY(-1px);
+}
+.btn-outline {
+  background: transparent; color: var(--text-2);
+  border: 1px solid var(--border-2);
+}
+.btn-outline:hover { background: var(--surf-2); border-color: var(--border-2); color: var(--text); }
+.btn-ghost { background: transparent; color: var(--text-3); }
+.btn-ghost:hover { background: var(--surf-2); color: var(--text); }
+.btn-sm { padding: 7px 14px; font-size: 13px; min-height: 36px; }
+.btn-lg { padding: 13px 28px; font-size: 16px; min-height: 52px; }
+
+/* ─── Risk badges ───────────────────────────────── */
+.risk-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 99px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+}
+.risk-high { background: var(--high-bg); color: var(--high); }
+.risk-med  { background: var(--med-bg);  color: var(--med); }
+.risk-low  { background: var(--low-bg);  color: var(--low); }
+.risk-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ─── Section layout ────────────────────────────── */
+.section { padding: var(--space-section, 72px) 20px; }
+.section-inner { max-width: 1100px; margin: 0 auto; }
+.section-sm { max-width: 760px; margin: 0 auto; }
+.section-label {
+  font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--accent-text, var(--accent)); margin-bottom: 12px;
+}
+.section-title {
+  font-size: clamp(26px, 4vw, 40px); font-weight: 800;
+  color: var(--text); letter-spacing: -0.5px; line-height: 1.2;
+}
+.section-sub {
+  font-size: 16px; color: var(--text-3); margin-top: 10px; line-height: 1.6;
+}
+
+/* ─── HERO ──────────────────────────────────────── */
+.hero {
+  padding: 80px 20px 64px;
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 56px; align-items: center;
+}
+@media (max-width: 768px) {
+  .hero { grid-template-columns: 1fr; gap: 40px; padding-top: 48px; }
+  .hero-preview { order: -1; }
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--accent-dim); border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 99px; padding: 4px 12px;
+  font-size: 12px; font-weight: 600; color: var(--accent-text, var(--accent));
+  margin-bottom: 20px;
+}
+.hero-title {
+  font-size: clamp(34px, 5vw, 54px); font-weight: 800;
+  color: var(--text); letter-spacing: -1px; line-height: 1.1;
+  margin-bottom: 20px;
+}
+.hero-title-accent {
+  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-sub { font-size: 17px; color: var(--text-3); line-height: 1.65; margin-bottom: 28px; max-width: 440px; }
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.hero-footnote { font-size: 12px; color: var(--text-5); margin-top: 14px; }
+
+/* ─── Analysis preview card ─────────────────────── */
+.preview-card {
+  background: var(--surf);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
+  position: relative;
+}
+[data-theme="light"] .preview-card { box-shadow: 0 24px 64px rgba(0,0,0,0.12), 0 0 0 1px var(--border); }
+
+.preview-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surf-2);
+}
+.preview-filename {
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  display: flex; align-items: center; gap: 7px;
+}
+.preview-filename-icon { color: var(--text-4); }
+.preview-overall {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.preview-overall-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-4); }
+.preview-zones { padding: 0; }
+.preview-zone {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.preview-zone:last-child { border-bottom: none; }
+.preview-zone:hover { background: var(--surf-2); }
+.pz-left { flex-shrink: 0; margin-top: 2px; }
+.pz-name { font-size: 12px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.4px; }
+.pz-note { font-size: 12px; color: var(--text-4); margin-top: 1px; }
+.pz-badge { flex-shrink: 0; margin-left: auto; padding-left: 8px; }
+.preview-footer {
+  padding: 10px 16px;
+  background: var(--surf-2);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.preview-footer-note { font-size: 11px; color: var(--text-4); }
+.preview-cta { font-size: 12px; font-weight: 600; color: var(--accent-text, var(--accent)); }
+
+/* ─── Zone indicators ───────────────────────────── */
+.zone-icon {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+
+/* ─── Steps section ─────────────────────────────── */
+.steps-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 0; position: relative;
+  counter-reset: step;
+}
+@media (max-width: 640px) {
+  .steps-row { grid-template-columns: 1fr; gap: 0; }
+}
+.step-connector {
+  position: absolute; top: 24px; left: 0; right: 0;
+  height: 1px; background: var(--border-2); z-index: 0;
+}
+@media (max-width: 640px) { .step-connector { display: none; } }
+.step {
+  position: relative; z-index: 1;
+  padding: 0 20px 0 0;
+}
+.step:last-child { padding-right: 0; }
+.step-num {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--surf-2); border: 1px solid var(--border-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: var(--text-3);
+  margin-bottom: 16px;
+}
+.step.step-active .step-num {
+  background: var(--accent-dim); border-color: var(--accent);
+  color: var(--accent-text, var(--accent));
+}
+.step-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.step-desc { font-size: 14px; color: var(--text-3); line-height: 1.55; }
+
+/* ─── Danger zones ──────────────────────────────── */
+.zones-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+@media (max-width: 640px) { .zones-grid { grid-template-columns: 1fr; } }
+.zone-card {
+  background: var(--surf);
+  padding: 24px;
+  position: relative;
+  transition: background 0.15s;
+}
+.zone-card:hover { background: var(--surf-2); }
+.zone-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; border-radius: 0;
+}
+.zc-pay::before   { background: #10b981; }
+.zc-ip::before    { background: #3b82f6; }
+.zc-nc::before    { background: #ef4444; }
+.zc-term::before  { background: #f59e0b; }
+.zc-indem::before { background: #f97316; }
+.zc-liab::before  { background: #a855f7; }
+.zone-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+.zone-card-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.zone-card-q { font-size: 13px; color: var(--text-3); margin-bottom: 10px; font-style: italic; }
+.zone-card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.zone-tag {
+  font-size: 11px; color: var(--text-4); background: var(--surf-2);
+  border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px;
+}
+
+/* ─── Pricing ───────────────────────────────────── */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+@media (max-width: 900px) { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .pricing-grid { grid-template-columns: 1fr; } }
+.tier-card {
+  background: var(--surf);
+  padding: 28px 24px;
+  display: flex; flex-direction: column;
+  position: relative;
+}
+.tier-card.tier-featured {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surf));
+}
+.tier-badge {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--accent); color: #fff;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;
+  padding: 3px 8px; border-radius: 99px;
+}
+.tier-name { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-3); margin-bottom: 8px; }
+.tier-price {
+  font-size: 36px; font-weight: 800; color: var(--text); letter-spacing: -1px; line-height: 1;
+  margin-bottom: 4px;
+}
+.tier-price sup { font-size: 18px; font-weight: 600; vertical-align: top; margin-top: 4px; }
+.tier-price span { font-size: 14px; font-weight: 400; color: var(--text-4); }
+.tier-scans { font-size: 13px; color: var(--text-3); margin-bottom: 20px; }
+.tier-features { list-style: none; flex: 1; margin-bottom: 24px; display: flex; flex-direction: column; gap: 7px; }
+.tier-features li { font-size: 13px; color: var(--text-3); display: flex; gap: 8px; align-items: baseline; }
+.tier-features li::before { content: '–'; color: var(--accent-text, var(--accent)); font-weight: 700; flex-shrink: 0; }
+.tier-cta { margin-top: auto; }
+.tier-divider {
+  width: 100%; height: 1px; background: var(--border);
+  margin: 20px 0;
+}
+.per-scan { font-size: 11px; color: var(--text-5); margin-top: 6px; }
+
+/* ─── Dashboard layout ──────────────────────────── */
+.dash-layout {
+  max-width: 1100px; margin: 0 auto; padding: 32px 20px;
+  display: grid; grid-template-columns: 280px 1fr;
+  gap: 24px; align-items: start;
+}
+@media (max-width: 768px) {
+  .dash-layout { grid-template-columns: 1fr; }
+}
+.dash-sidebar { display: flex; flex-direction: column; gap: 16px; }
+.dash-main { display: flex; flex-direction: column; gap: 24px; }
+
+/* ─── Cards (dashboard) ─────────────────────────── */
+.card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--space-card, 24px);
+}
+.card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-4); margin-bottom: 16px; }
+
+/* ─── Usage ring ────────────────────────────────── */
+.usage-ring-wrap { display: flex; align-items: center; gap: 20px; }
+.ring-svg { flex-shrink: 0; }
+.ring-track { fill: none; stroke: var(--surf-2); stroke-width: 5; }
+.ring-fill  { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; transform-origin: center; transform: rotate(-90deg); }
+.ring-label { font-size: 11px; color: var(--text-4); }
+.ring-value { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; line-height: 1.1; }
+.ring-sub   { font-size: 12px; color: var(--text-4); }
+
+/* ─── Upload zone ───────────────────────────────── */
+.upload-zone {
+  border: 2px dashed var(--border-2);
+  border-radius: var(--r-xl);
+  padding: 44px 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+  background: transparent;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.upload-icon {
+  width: 52px; height: 52px; border-radius: 12px;
+  background: var(--surf-2); border: 1px solid var(--border-2);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.upload-title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.upload-sub { font-size: 14px; color: var(--text-3); margin-bottom: 20px; }
+.upload-note { font-size: 12px; color: var(--text-5); margin-top: 12px; }
+
+/* ─── Scan history ──────────────────────────────── */
+.history-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--r);
+  background: var(--surf);
+  border: 1px solid var(--border);
+  transition: border-color 0.15s, background 0.15s;
+  cursor: pointer;
+}
+.history-item:hover { border-color: var(--border-2); background: var(--surf-2); }
+.history-risk-bar { width: 4px; align-self: stretch; border-radius: 2px; flex-shrink: 0; }
+.history-risk-bar.high { background: var(--high); }
+.history-risk-bar.med  { background: var(--med); }
+.history-risk-bar.low  { background: var(--low); }
+.history-info { flex: 1; min-width: 0; }
+.history-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-meta { font-size: 12px; color: var(--text-4); margin-top: 2px; }
+.history-zones { display: flex; gap: 4px; flex-shrink: 0; }
+.history-arrow { color: var(--text-5); font-size: 14px; flex-shrink: 0; }
+
+/* ─── Auth modal ────────────────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-backdrop.hidden { display: none; }
+.modal-box {
+  background: var(--surf);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-xl);
+  padding: 28px;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.modal-title  { font-size: 18px; font-weight: 700; color: var(--text); }
+.modal-close  { width: 32px; height: 32px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; color: var(--text-4); transition: background 0.15s, color 0.15s; }
+.modal-close:hover { background: var(--surf-2); color: var(--text); }
+.form-group { margin-bottom: 14px; }
+.form-label  { font-size: 13px; font-weight: 500; color: var(--text-3); display: block; margin-bottom: 6px; }
+.form-input  {
+  width: 100%; padding: 11px 14px;
+  background: var(--surf-2); border: 1px solid var(--border-2); border-radius: var(--r);
+  color: var(--text); font-size: 14px; font-family: inherit;
+  transition: border-color 0.15s;
+  outline: none; min-height: 44px;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--text-5); }
+.form-error   { font-size: 13px; color: var(--high); margin-top: 8px; }
+.form-success { font-size: 13px; color: var(--low); margin-top: 8px; }
+
+/* ─── Report modal ──────────────────────────────── */
+.report-modal-box {
+  background: var(--surf);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-xl);
+  width: 100%; max-width: 680px;
+  max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+.report-header { padding: 24px 24px 0; }
+.report-title { font-size: 18px; font-weight: 700; color: var(--text); }
+.report-filename { font-size: 13px; color: var(--text-4); margin-top: 3px; }
+.report-scorecard {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border); border-radius: var(--r);
+  overflow: hidden; margin: 20px 24px;
+}
+@media (max-width: 480px) { .report-scorecard { grid-template-columns: 1fr 1fr; } }
+.sc-cell {
+  background: var(--surf);
+  padding: 14px 12px;
+}
+.sc-cell:hover { background: var(--surf-2); cursor: pointer; }
+.sc-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-4); margin-bottom: 6px; }
+.sc-finding { font-size: 12px; color: var(--text-3); margin-top: 6px; line-height: 1.45; }
+.report-body { padding: 0 24px 24px; }
+.report-section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-4); margin: 20px 0 10px; }
+.report-actions { display: flex; flex-direction: column; gap: 8px; }
+.report-action {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: var(--r);
+  background: var(--surf-2); border: 1px solid var(--border);
+}
+.ra-num { font-size: 12px; font-weight: 700; color: var(--accent-text, var(--accent)); flex-shrink: 0; width: 18px; }
+.ra-text { font-size: 13px; color: var(--text-3); line-height: 1.5; }
+.report-disclaimer { font-size: 11px; color: var(--text-5); text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* ─── Tweaks panel ──────────────────────────────── */
+.tweaks-btn {
+  position: fixed; bottom: 20px; right: 20px; z-index: 150;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--surf-2); border: 1px solid var(--border-2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); transition: all 0.15s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.tweaks-btn:hover { background: var(--surf-3); color: var(--text); transform: rotate(15deg); }
+.tweaks-panel {
+  position: fixed; bottom: 74px; right: 20px; z-index: 150;
+  background: var(--surf); border: 1px solid var(--border-2);
+  border-radius: var(--r-lg); padding: 20px;
+  width: 240px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.tweaks-panel.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+.tweaks-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-4); margin-bottom: 14px; }
+.tweaks-row { margin-bottom: 16px; }
+.tweaks-label { font-size: 12px; font-weight: 500; color: var(--text-3); margin-bottom: 8px; }
+.tweaks-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+.tweaks-opt {
+  padding: 6px 12px; border-radius: var(--r-sm);
+  font-size: 12px; font-weight: 500; color: var(--text-3);
+  background: var(--surf-2); border: 1px solid var(--border);
+  transition: all 0.15s; cursor: pointer; min-height: 32px;
+}
+.tweaks-opt:hover { border-color: var(--accent); color: var(--accent-text, var(--accent)); }
+.tweaks-opt.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent-text, var(--accent)); font-weight: 600; }
+.accent-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.tweaks-divider { margin-bottom: 14px; }
+.tweaks-view-row { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 2px; }
+
+/* ─── Plan badge ────────────────────────────────── */
+.plan-badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600;
+}
+.plan-free         { background: var(--surf-2); color: var(--text-4); border: 1px solid var(--border); }
+.plan-side-hustler { background: var(--accent-dim); color: var(--accent-text, var(--accent)); border: 1px solid rgba(99,102,241,0.2); }
+.plan-pro          { background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+.plan-agency       { background: rgba(245,158,11,0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+
+/* ─── Toast ─────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--surf-2); border: 1px solid var(--border-2); border-radius: var(--r);
+  padding: 10px 18px; font-size: 14px; font-weight: 500; color: var(--text);
+  z-index: 999; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  transition: opacity 0.3s, transform 0.3s; opacity: 0; transform: translateX(-50%) translateY(8px);
+  pointer-events: none;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.t-success { border-color: rgba(34,197,94,0.3); }
+#toast.t-error   { border-color: rgba(239,68,68,0.3); }
+#toast.t-info    { border-color: rgba(99,102,241,0.3); }
+
+/* ─── Footer ────────────────────────────────────── */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 20px;
+  margin-top: 24px;
+}
+.site-footer-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+}
+.footer-note { font-size: 13px; color: var(--text-5); }
+.footer-links { display: flex; gap: 24px; }
+.footer-link { font-size: 13px; color: var(--text-4); transition: color 0.15s; }
+.footer-link:hover { color: var(--text); }
+
+/* ─── Upgrade banner ────────────────────────────── */
+.upgrade-banner {
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 20px 24px;
+  background: var(--surf);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+}
+.upgrade-banner.active-plan { border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.04); }
+
+/* ─── Helpers ───────────────────────────────────── */
+.hidden  { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.divider { height: 1px; background: var(--border); margin: 0 20px; }
+
+/* ─── Scrollbar ─────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surf-3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-5); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     TWEAKS PANEL
+═══════════════════════════════════════════════════ -->
+<div class="tweaks-panel hidden" id="tweaks-panel">
+  <div class="tweaks-title">Preview Controls</div>
+
+  <div class="tweaks-row">
+    <div class="tweaks-label">Theme</div>
+    <div class="tweaks-opts">
+      <button class="tweaks-opt active" onclick="setTheme('dark')" id="opt-dark">Dark</button>
+      <button class="tweaks-opt" onclick="setTheme('light')" id="opt-light">Light</button>
+    </div>
+  </div>
+
+  <div class="tweaks-row">
+    <div class="tweaks-label">Density</div>
+    <div class="tweaks-opts">
+      <button class="tweaks-opt active" onclick="setDensity('comfortable')" id="opt-comfortable">Comfortable</button>
+      <button class="tweaks-opt" onclick="setDensity('compact')" id="opt-compact">Compact</button>
+    </div>
+  </div>
+
+  <div class="tweaks-row tweaks-divider">
+    <div class="tweaks-label">Accent</div>
+    <div class="tweaks-opts">
+      <button class="tweaks-opt active" onclick="setAccent('indigo')" id="opt-indigo">
+        <span class="accent-dot" style="background:#6366f1"></span>&nbsp;Indigo
+      </button>
+      <button class="tweaks-opt" onclick="setAccent('purple')" id="opt-purple">
+        <span class="accent-dot" style="background:#a855f7"></span>&nbsp;Purple
+      </button>
+      <button class="tweaks-opt" onclick="setAccent('rose')" id="opt-rose">
+        <span class="accent-dot" style="background:#f43f5e"></span>&nbsp;Rose
+      </button>
+      <button class="tweaks-opt" onclick="setAccent('emerald')" id="opt-emerald">
+        <span class="accent-dot" style="background:#10b981"></span>&nbsp;Emerald
+      </button>
+    </div>
+  </div>
+
+  <div class="tweaks-view-row">
+    <div class="tweaks-label">View</div>
+    <div class="tweaks-opts">
+      <button class="tweaks-opt active" onclick="switchView('landing')" id="opt-landing">Landing</button>
+      <button class="tweaks-opt" onclick="switchView('dashboard')" id="opt-dashboard">Dashboard</button>
+    </div>
+  </div>
+</div>
+<button class="tweaks-btn" onclick="toggleTweaks()" title="Design controls" aria-label="Toggle design controls">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="8" cy="8" r="2.5"/>
+    <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
+  </svg>
+</button>
+
+<!-- ═══════════════════════════════════════════════════
+     VIEW: LANDING
+═══════════════════════════════════════════════════ -->
+<div id="view-landing">
+
+  <!-- NAV -->
+  <nav class="cl-nav">
+    <div class="cl-nav-inner">
+      <a href="#" class="cl-logo" onclick="return false">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <circle cx="11" cy="11" r="7" stroke="#6366f1" stroke-width="2.2"/>
+          <path d="M16.5 16.5L22 22" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="11" cy="11" r="3.5" fill="#6366f1" fill-opacity="0.22"/>
+        </svg>
+        ContractLens
+      </a>
+      <div class="nav-actions">
+        <span id="nav-user-email" class="hidden nav-link" style="pointer-events:none;font-size:13px"></span>
+        <a href="#" class="nav-link hidden" id="nav-dashboard" onclick="switchView('dashboard');return false">Dashboard</a>
+        <button class="btn btn-ghost btn-sm hidden" id="btn-signout-landing" onclick="handleSignOut()">Sign Out</button>
+        <button class="btn btn-ghost btn-sm" id="btn-signin-landing" onclick="openAuth('signin')">Sign In</button>
+        <button class="btn btn-primary btn-sm" id="btn-start-landing" onclick="handleStart()">Get Started Free</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px">
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="hero-eyebrow">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="4"/></svg>
+        AI contract analysis for freelancers
+      </div>
+      <h1 class="hero-title">
+        Know what you're<br>
+        <span class="hero-title-accent">actually signing</span>
+      </h1>
+      <p class="hero-sub">
+        Your next contract might lock you out of future work, cap your earnings, or leave you liable for millions. Upload it — get a plain-English breakdown in minutes.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary btn-lg" onclick="handleStart()">
+          Analyze a contract free
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
+        </button>
+        <button class="btn btn-outline btn-lg" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">
+          View pricing
+        </button>
+      </div>
+      <p class="hero-footnote">Free first scan. No credit card required.</p>
+    </div>
+
+    <!-- ANALYSIS PREVIEW CARD -->
+    <div class="hero-preview">
+      <div class="preview-card">
+        <div class="preview-header">
+          <div class="preview-filename">
+            <svg class="preview-filename-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="9" height="12" rx="1.5"/><path d="M5 4h4M5 6.5h4M5 9h2.5"/></svg>
+            acme_contractor_agreement.pdf
+          </div>
+          <span class="risk-badge risk-high"><span class="risk-dot"></span>HIGH RISK</span>
+        </div>
+        <div class="preview-overall">
+          <span class="preview-overall-label">6 zones analyzed</span>
+          <span style="font-size:12px;color:var(--text-4)">3 items to negotiate</span>
+        </div>
+        <div class="preview-zones">
+          <div class="preview-zone">
+            <div class="pz-left">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--high);margin-top:3px"></div>
+            </div>
+            <div style="flex:1">
+              <div class="pz-name">Payment Terms</div>
+              <div class="pz-note">Net-60 with clawback clause on revisions</div>
+            </div>
+            <div class="pz-badge"><span class="risk-badge risk-high" style="font-size:10px">HIGH</span></div>
+          </div>
+          <div class="preview-zone">
+            <div class="pz-left">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--med);margin-top:3px"></div>
+            </div>
+            <div style="flex:1">
+              <div class="pz-name">IP &amp; Ownership</div>
+              <div class="pz-note">Work-for-hire applies; portfolio requires approval</div>
+            </div>
+            <div class="pz-badge"><span class="risk-badge risk-med" style="font-size:10px">MED</span></div>
+          </div>
+          <div class="preview-zone">
+            <div class="pz-left">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--high);margin-top:3px"></div>
+            </div>
+            <div style="flex:1">
+              <div class="pz-name">Non-Compete</div>
+              <div class="pz-note">18 months, includes "similar" work definition</div>
+            </div>
+            <div class="pz-badge"><span class="risk-badge risk-high" style="font-size:10px">HIGH</span></div>
+          </div>
+          <div class="preview-zone">
+            <div class="pz-left">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--low);margin-top:3px"></div>
+            </div>
+            <div style="flex:1">
+              <div class="pz-name">Termination</div>
+              <div class="pz-note">Standard 30-day notice, no auto-renewal</div>
+            </div>
+            <div class="pz-badge"><span class="risk-badge risk-low" style="font-size:10px">LOW</span></div>
+          </div>
+          <div class="preview-zone">
+            <div class="pz-left">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--med);margin-top:3px"></div>
+            </div>
+            <div style="flex:1">
+              <div class="pz-name">Indemnification</div>
+              <div class="pz-note">Non-mutual; you cover client's legal costs</div>
+            </div>
+            <div class="pz-badge"><span class="risk-badge risk-med" style="font-size:10px">MED</span></div>
+          </div>
+          <div class="preview-zone">
+            <div class="pz-left">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--med);margin-top:3px"></div>
+            </div>
+            <div style="flex:1">
+              <div class="pz-name">Liability Caps</div>
+              <div class="pz-note">Capped at fees paid; exceptions for IP claims</div>
+            </div>
+            <div class="pz-badge"><span class="risk-badge risk-med" style="font-size:10px">MED</span></div>
+          </div>
+        </div>
+        <div class="preview-footer">
+          <span class="preview-footer-note">Full report + recommendations delivered to email</span>
+          <span class="preview-cta">View report →</span>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- WHAT WE CHECK -->
+  <section class="section" id="zones">
+    <div class="section-inner">
+      <div style="margin-bottom:40px">
+        <div class="section-label">What we check</div>
+        <h2 class="section-title">Six danger zones.<br>Every contract. Every time.</h2>
+        <p class="section-sub" style="max-width:520px">We don't give you a generic score. Every zone gets a risk level, the exact clause that triggered it, and a concrete recommendation.</p>
+      </div>
+
+      <div class="zones-grid">
+        <!-- Payment Terms -->
+        <div class="zone-card zc-pay">
+          <div class="zone-card-top">
+            <div>
+              <div class="zone-card-name" style="color:#10b981">Payment Terms</div>
+              <div class="zone-card-q">When do you actually get paid?</div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-3);line-height:1.6">
+            When and how you get paid, late payment fees, holdback provisions, and clawback clauses that let clients demand money back.
+          </div>
+          <div class="zone-card-tags">
+            <span class="zone-tag">Net-30/60/90</span>
+            <span class="zone-tag">Late fees</span>
+            <span class="zone-tag">Clawbacks</span>
+            <span class="zone-tag">Milestones</span>
+          </div>
+        </div>
+
+        <!-- IP & Ownership -->
+        <div class="zone-card zc-ip">
+          <div class="zone-card-top">
+            <div>
+              <div class="zone-card-name" style="color:#3b82f6">IP &amp; Ownership</div>
+              <div class="zone-card-q">Who owns your work?</div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-3);line-height:1.6">
+            Work-for-hire clauses, who holds copyright after delivery, portfolio and case-study rights, and future-use restrictions.
+          </div>
+          <div class="zone-card-tags">
+            <span class="zone-tag">Work-for-hire</span>
+            <span class="zone-tag">Portfolio rights</span>
+            <span class="zone-tag">Copyright</span>
+            <span class="zone-tag">Moral rights</span>
+          </div>
+        </div>
+
+        <!-- Non-Compete -->
+        <div class="zone-card zc-nc">
+          <div class="zone-card-top">
+            <div>
+              <div class="zone-card-name" style="color:#ef4444">Non-Compete</div>
+              <div class="zone-card-q">Can you work for their competitors?</div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-3);line-height:1.6">
+            Scope, duration, and geographic limits of non-compete clauses. Broad "similar work" definitions that can shut you out of an industry.
+          </div>
+          <div class="zone-card-tags">
+            <span class="zone-tag">Duration</span>
+            <span class="zone-tag">Geographic scope</span>
+            <span class="zone-tag">Industry limits</span>
+            <span class="zone-tag">Non-solicit</span>
+          </div>
+        </div>
+
+        <!-- Termination -->
+        <div class="zone-card zc-term">
+          <div class="zone-card-top">
+            <div>
+              <div class="zone-card-name" style="color:#f59e0b">Termination</div>
+              <div class="zone-card-q">How do you get out?</div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-3);line-height:1.6">
+            Exit clauses, notice periods required by each party, auto-renewal traps, and what happens to work-in-progress on termination.
+          </div>
+          <div class="zone-card-tags">
+            <span class="zone-tag">Notice periods</span>
+            <span class="zone-tag">Auto-renewal</span>
+            <span class="zone-tag">Kill fees</span>
+            <span class="zone-tag">Termination for cause</span>
+          </div>
+        </div>
+
+        <!-- Indemnification -->
+        <div class="zone-card zc-indem">
+          <div class="zone-card-top">
+            <div>
+              <div class="zone-card-name" style="color:#f97316">Indemnification</div>
+              <div class="zone-card-q">Who pays if things go wrong?</div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-3);line-height:1.6">
+            Who is liable for what, whether indemnification is mutual or one-sided, and whether you're covering the client's legal defense costs.
+          </div>
+          <div class="zone-card-tags">
+            <span class="zone-tag">Mutual vs one-sided</span>
+            <span class="zone-tag">Third-party claims</span>
+            <span class="zone-tag">Defense costs</span>
+          </div>
+        </div>
+
+        <!-- Liability Caps -->
+        <div class="zone-card zc-liab">
+          <div class="zone-card-top">
+            <div>
+              <div class="zone-card-name" style="color:#a855f7">Liability Caps</div>
+              <div class="zone-card-q">How much can they sue you for?</div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-3);line-height:1.6">
+            Maximum damage limits, exclusions for IP infringement or willful misconduct, and uncapped liability buried in carve-outs.
+          </div>
+          <div class="zone-card-tags">
+            <span class="zone-tag">Damage caps</span>
+            <span class="zone-tag">Consequential damages</span>
+            <span class="zone-tag">Carve-outs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section">
+    <div class="section-inner section-sm">
+      <div style="text-align:center;margin-bottom:40px">
+        <div class="section-label" style="text-align:center">How it works</div>
+        <h2 class="section-title">From upload to inbox<br>in minutes</h2>
+      </div>
+      <div style="position:relative">
+        <div class="steps-row">
+          <div class="step step-active">
+            <div class="step-num">1</div>
+            <div class="step-title">Upload your contract</div>
+            <div class="step-desc">Drop any PDF, DOCX, or TXT. We extract the text securely — files are deleted after processing, overwritten with zeros.</div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-title">AI checks 6 danger zones</div>
+            <div class="step-desc">Our model reads the full contract and flags risk levels, quotes the relevant clauses, and explains what they mean in plain English.</div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-title">Report lands in your inbox</div>
+            <div class="step-desc">A color-coded HTML report with specific negotiation recommendations. Know what to push back on before you sign.</div>
+          </div>
+        </div>
+        <div class="step-connector"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PRICING -->
+  <section class="section" id="pricing">
+    <div class="section-inner">
+      <div style="margin-bottom:40px">
+        <div class="section-label">Pricing</div>
+        <h2 class="section-title">Start free.<br>Pay for what you use.</h2>
+        <p class="section-sub" style="max-width:440px">One scan to test it out. Monthly plans for freelancers who sign contracts regularly. Cancel any time.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Free -->
+        <div class="tier-card">
+          <div class="tier-name">Free</div>
+          <div class="tier-price"><sup>$</sup>0</div>
+          <div class="tier-scans">1 scan, ever</div>
+          <div class="tier-divider"></div>
+          <ul class="tier-features">
+            <li>Full 6-zone analysis</li>
+            <li>Risk levels per zone</li>
+            <li>HTML report by email</li>
+            <li>Key clause quotes</li>
+          </ul>
+          <div class="tier-cta">
+            <button class="btn btn-outline" style="width:100%" onclick="handleStart()">Try free scan</button>
+          </div>
+        </div>
+
+        <!-- Side Hustler -->
+        <div class="tier-card tier-featured" style="position:relative">
+          <div class="tier-badge">Popular</div>
+          <div class="tier-name">Side Hustler</div>
+          <div class="tier-price"><sup>$</sup>12<span>/mo</span></div>
+          <div class="tier-scans">5 scans per month</div>
+          <div class="tier-divider"></div>
+          <ul class="tier-features">
+            <li>Everything in Free</li>
+            <li>Scan history &amp; dashboard</li>
+            <li>Priority processing</li>
+          </ul>
+          <div class="per-scan">$2.40 per scan</div>
+          <div class="tier-cta" style="margin-top:16px">
+            <button class="btn btn-primary" style="width:100%" onclick="subscribe('side_hustler')">Subscribe — $12/mo</button>
+          </div>
+        </div>
+
+        <!-- Power Freelancer -->
+        <div class="tier-card">
+          <div class="tier-name">Power Freelancer</div>
+          <div class="tier-price"><sup>$</sup>25<span>/mo</span></div>
+          <div class="tier-scans">20 scans per month</div>
+          <div class="tier-divider"></div>
+          <ul class="tier-features">
+            <li>Everything in Side Hustler</li>
+            <li>Redline suggestions</li>
+            <li>Compare mode</li>
+            <li>Contract templates</li>
+          </ul>
+          <div class="per-scan">$1.25 per scan</div>
+          <div class="tier-cta" style="margin-top:16px">
+            <button class="btn btn-outline" style="width:100%" onclick="subscribe('power_freelancer')">Subscribe — $25/mo</button>
+          </div>
+        </div>
+
+        <!-- Agency -->
+        <div class="tier-card">
+          <div class="tier-name">Agency</div>
+          <div class="tier-price"><sup>$</sup>49<span>/mo</span></div>
+          <div class="tier-scans">50 scans per month</div>
+          <div class="tier-divider"></div>
+          <ul class="tier-features">
+            <li>Everything in Power</li>
+            <li>Team members (up to 5)</li>
+            <li>Bulk upload</li>
+            <li>Export to PDF/CSV</li>
+          </ul>
+          <div class="per-scan">$0.98 per scan</div>
+          <div class="tier-cta" style="margin-top:16px">
+            <button class="btn btn-outline" style="width:100%" onclick="subscribe('agency')">Subscribe — $49/mo</button>
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size:12px;color:var(--text-5);text-align:center;margin-top:20px">
+        All plans include the full 6-zone analysis, plain-English summaries, and email delivery. Not legal advice.
+      </p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div>
+        <div class="cl-logo" style="margin-bottom:6px">
+          <svg width="20" height="20" viewBox="0 0 26 26" fill="none">
+            <circle cx="11" cy="11" r="7" stroke="#6366f1" stroke-width="2.2"/>
+            <path d="M16.5 16.5L22 22" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="11" cy="11" r="3.5" fill="#6366f1" fill-opacity="0.22"/>
+          </svg>
+          ContractLens
+        </div>
+        <div class="footer-note">© 2026 ContractLens. Not legal advice.</div>
+      </div>
+      <div class="footer-links">
+        <a href="tos.html" class="footer-link">Terms</a>
+        <a href="privacy.html" class="footer-link">Privacy</a>
+        <a href="mailto:support@contractlens.io" class="footer-link">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /view-landing -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     VIEW: DASHBOARD
+═══════════════════════════════════════════════════ -->
+<div id="view-dashboard" class="hidden">
+
+  <!-- DASHBOARD NAV -->
+  <nav class="cl-nav">
+    <div class="cl-nav-inner">
+      <a href="#" class="cl-logo" onclick="switchView('landing');return false">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <circle cx="11" cy="11" r="7" stroke="#6366f1" stroke-width="2.2"/>
+          <path d="M16.5 16.5L22 22" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="11" cy="11" r="3.5" fill="#6366f1" fill-opacity="0.22"/>
+        </svg>
+        ContractLens
+      </a>
+      <div class="nav-actions">
+        <span id="dash-email" class="nav-link" style="pointer-events:none;font-size:13px">demo@example.com</span>
+        <span class="plan-badge plan-side-hustler" id="dash-plan-badge">Side Hustler</span>
+        <button class="btn btn-ghost btn-sm" onclick="handleSignOut()">Sign Out</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="dash-layout">
+    <!-- SIDEBAR -->
+    <aside class="dash-sidebar">
+
+      <!-- Usage card -->
+      <div class="card">
+        <div class="card-title">Monthly Usage</div>
+        <div class="usage-ring-wrap">
+          <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
+            <circle class="ring-track" cx="36" cy="36" r="28"/>
+            <circle class="ring-fill" id="usage-ring" cx="36" cy="36" r="28"
+              stroke-dasharray="175.9" stroke-dashoffset="105.5"/>
+          </svg>
+          <div>
+            <div class="ring-value"><span id="dash-used">2</span><span style="font-size:14px;color:var(--text-4)"> / <span id="dash-limit">5</span></span></div>
+            <div class="ring-sub">scans used</div>
+            <div class="ring-label" style="margin-top:4px">resets Jun 1</div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+            <span style="color:var(--text-4)">High-risk zones found</span>
+            <span style="color:var(--high);font-weight:700" id="dash-high-risks">3</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--text-4)">Total scans</span>
+            <span style="color:var(--text-3);font-weight:600" id="dash-total">2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plan card / upgrade -->
+      <div class="upgrade-banner" id="dash-upgrade">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px">Side Hustler plan</div>
+          <div style="font-size:13px;color:var(--text-4)">5 scans/month. Need more?</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="switchView('landing');setTimeout(()=>document.getElementById('pricing').scrollIntoView({behavior:'smooth'}),100)">
+          Upgrade
+        </button>
+      </div>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="dash-main">
+
+      <!-- Upload zone -->
+      <div id="upload-zone" class="upload-zone"
+        onclick="document.getElementById('file-input').click()"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="handleDrop(event)">
+        <div class="upload-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 14V4M7 8l4-4 4 4M4 17h14M4 20h14"/>
+          </svg>
+        </div>
+        <div class="upload-title">Upload a contract</div>
+        <div class="upload-sub">Drag and drop a PDF, DOCX, or TXT file — or click to browse</div>
+        <button class="btn btn-primary" onclick="event.stopPropagation();document.getElementById('file-input').click()">Choose file</button>
+        <input type="file" id="file-input" accept=".pdf,.docx,.txt,.md" class="hidden" onchange="handleUpload(this.files[0])">
+        <div class="upload-note">Max 20MB &nbsp;·&nbsp; Files are securely deleted after processing</div>
+      </div>
+
+      <!-- Upload status -->
+      <div id="upload-status" class="card hidden">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div id="upload-spinner" style="width:32px;height:32px;border:2.5px solid var(--accent-dim);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600;color:var(--text)" id="upload-filename-display">contract.pdf</div>
+            <div style="font-size:13px;color:var(--text-4);margin-top:2px" id="upload-msg">Extracting text...</div>
+          </div>
+        </div>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+      </div>
+
+      <!-- Scan history -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:16px;font-weight:700;color:var(--text)">Scan history</div>
+          <span style="font-size:12px;color:var(--text-5)" id="history-count">2 scans</span>
+        </div>
+        <div id="history-list" style="display:flex;flex-direction:column;gap:8px">
+          <!-- populated by JS -->
+        </div>
+        <div id="history-empty" class="hidden" style="text-align:center;padding:40px 20px;color:var(--text-5);font-size:14px">
+          No scans yet. Upload your first contract above.
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</div><!-- /view-dashboard -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     AUTH MODAL
+═══════════════════════════════════════════════════ -->
+<div id="auth-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="auth-title">Create account</div>
+      <button class="modal-close" onclick="closeAuth()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l12 12M13 1L1 13"/></svg>
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="auth-email">Email</label>
+      <input class="form-input" id="auth-email" type="email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="auth-password">Password</label>
+      <input class="form-input" id="auth-password" type="password" placeholder="Minimum 8 characters" autocomplete="current-password">
+    </div>
+
+    <div id="auth-error"   class="form-error   hidden"></div>
+    <div id="auth-success" class="form-success hidden"></div>
+
+    <button id="auth-submit" class="btn btn-primary" style="width:100%;margin-top:16px" onclick="handleAuth()">
+      Create account
+    </button>
+
+    <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--text-4)">
+      <span id="auth-switch-text">Already have an account?</span>
+      <button onclick="toggleAuthMode()" style="color:var(--accent-text,var(--accent));font-weight:600;background:none;border:none;cursor:pointer;font-size:13px;margin-left:4px" id="auth-switch-btn">Sign in</button>
+    </div>
+
+    <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:14px;text-align:center">
+      <p style="font-size:11px;color:var(--text-5)">
+        By signing up you agree to our <a href="tos.html" style="color:var(--accent-text,var(--accent))">Terms</a> and <a href="privacy.html" style="color:var(--accent-text,var(--accent))">Privacy Policy</a>.
+      </p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     REPORT MODAL
+═══════════════════════════════════════════════════ -->
+<div id="report-modal" class="modal-backdrop hidden">
+  <div class="report-modal-box">
+    <div class="report-header" style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:0">
+      <div>
+        <div class="report-title" id="report-title">Contract Analysis</div>
+        <div class="report-filename" id="report-filename">document.pdf</div>
+      </div>
+      <button class="modal-close" onclick="closeReport()" style="flex-shrink:0;margin-top:2px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l12 12M13 1L1 13"/></svg>
+      </button>
+    </div>
+
+    <div style="padding:16px 24px 0;display:flex;align-items:center;gap:10px">
+      <div style="font-size:13px;color:var(--text-4)">Overall risk</div>
+      <span id="report-overall-badge" class="risk-badge risk-high"><span class="risk-dot"></span>HIGH</span>
+    </div>
+
+    <div class="report-scorecard" id="report-scorecard">
+      <!-- populated by JS -->
+    </div>
+
+    <div class="report-body">
+      <div class="report-section-title">Recommended actions</div>
+      <div class="report-actions" id="report-actions">
+        <!-- populated by JS -->
+      </div>
+      <div class="report-disclaimer">
+        Not legal advice. This analysis is informational only — consult a licensed attorney before signing.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════ -->
+<script>
+// ─── State ──────────────────────────────────────────
+let currentView  = 'landing';
+let authMode     = 'signup';
+let isSignedIn   = false;   // demo toggle
+let tweaksOpen   = false;
+
+const MOCK_USER  = { email: 'demo@example.com', plan: 'side_hustler' };
+const PLAN_NAMES = { free:'Free', side_hustler:'Side Hustler', power_freelancer:'Power Freelancer', agency:'Agency' };
+
+// ─── Mock scan data ──────────────────────────────────
+const MOCK_SCANS = [
+  {
+    id: '1',
+    filename: 'acme_contractor_agreement.pdf',
+    date: '2026-05-20T10:31:00Z',
+    risk: 'high',
+    status: 'done',
+    reportData: {
+      overall: 'high',
+      zones: [
+        { name:'Payment Terms',    risk:'high', note:'Net-60 with clawback clause on revision requests' },
+        { name:'IP & Ownership',   risk:'med',  note:'Work-for-hire applies; portfolio requires written approval' },
+        { name:'Non-Compete',      risk:'high', note:'18 months, includes "substantially similar" work definition' },
+        { name:'Termination',      risk:'low',  note:'Standard 30-day notice, no auto-renewal' },
+        { name:'Indemnification',  risk:'med',  note:'Non-mutual; you cover client\'s legal defense costs' },
+        { name:'Liability Caps',   risk:'med',  note:'Capped at fees paid; carve-out for IP infringement claims' },
+      ],
+      actions: [
+        'Negotiate Net-30 instead of Net-60, or add a 1.5%/month late fee after 30 days.',
+        'Add a clause explicitly granting you portfolio and case-study rights within 90 days of delivery.',
+        'Narrow the non-compete to 6 months and define "similar work" to only direct competitors by name.',
+      ]
+    }
+  },
+  {
+    id: '2',
+    filename: 'startup_nda_v2.docx',
+    date: '2026-05-15T14:10:00Z',
+    risk: 'low',
+    status: 'done',
+    reportData: {
+      overall: 'low',
+      zones: [
+        { name:'Payment Terms',    risk:'low', note:'No payment terms — NDA only, as expected' },
+        { name:'IP & Ownership',   risk:'low', note:'Limited to confidential information only, not work product' },
+        { name:'Non-Compete',      risk:'low', note:'No non-compete clause found' },
+        { name:'Termination',      risk:'low', note:'2-year term with standard termination provisions' },
+        { name:'Indemnification',  risk:'low', note:'Mutual indemnification with standard carve-outs' },
+        { name:'Liability Caps',   risk:'low', note:'No uncapped liability provisions found' },
+      ],
+      actions: [
+        'This NDA appears standard. Review the definition of "Confidential Information" to confirm it covers your intended scope.',
+      ]
+    }
+  }
+];
+
+// ─── View switching ──────────────────────────────────
+function switchView(view) {
+  currentView = view;
+  document.getElementById('view-landing').classList.toggle('hidden', view !== 'landing');
+  document.getElementById('view-dashboard').classList.toggle('hidden', view !== 'dashboard');
+  document.getElementById('opt-landing').classList.toggle('active', view === 'landing');
+  document.getElementById('opt-dashboard').classList.toggle('active', view === 'dashboard');
+  window.scrollTo(0, 0);
+  if (view === 'dashboard') renderDashboard();
+}
+
+// ─── Theme controls ──────────────────────────────────
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('opt-dark').classList.toggle('active', t === 'dark');
+  document.getElementById('opt-light').classList.toggle('active', t === 'light');
+}
+function setDensity(d) {
+  document.documentElement.setAttribute('data-density', d);
+  document.getElementById('opt-comfortable').classList.toggle('active', d === 'comfortable');
+  document.getElementById('opt-compact').classList.toggle('active', d === 'compact');
+}
+function setAccent(a) {
+  document.documentElement.setAttribute('data-accent', a);
+  ['indigo','purple','rose','emerald'].forEach(x => {
+    document.getElementById('opt-' + x).classList.toggle('active', x === a);
+  });
+}
+function toggleTweaks() {
+  tweaksOpen = !tweaksOpen;
+  document.getElementById('tweaks-panel').classList.toggle('hidden', !tweaksOpen);
+}
+
+// ─── Auth ────────────────────────────────────────────
+let _authMode = 'signup';
+function openAuth(mode) {
+  _authMode = mode;
+  document.getElementById('auth-modal').classList.remove('hidden');
+  document.getElementById('auth-title').textContent     = mode === 'signup' ? 'Create account' : 'Sign in';
+  document.getElementById('auth-submit').textContent    = mode === 'signup' ? 'Create account' : 'Sign in';
+  document.getElementById('auth-switch-text').textContent = mode === 'signup' ? 'Already have an account?' : "Don't have an account?";
+  document.getElementById('auth-switch-btn').textContent  = mode === 'signup' ? 'Sign in' : 'Sign up';
+  document.getElementById('auth-error').classList.add('hidden');
+  document.getElementById('auth-success').classList.add('hidden');
+}
+function closeAuth() { document.getElementById('auth-modal').classList.add('hidden'); }
+function toggleAuthMode() { openAuth(_authMode === 'signup' ? 'signin' : 'signup'); }
+
+function handleAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass   = document.getElementById('auth-password').value;
+  const errEl  = document.getElementById('auth-error');
+  const okEl   = document.getElementById('auth-success');
+  errEl.classList.add('hidden');
+  okEl.classList.add('hidden');
+
+  if (!email.includes('@')) {
+    errEl.textContent = 'Please enter a valid email address.';
+    errEl.classList.remove('hidden'); return;
+  }
+  if (pass.length < 8) {
+    errEl.textContent = 'Password must be at least 8 characters.';
+    errEl.classList.remove('hidden'); return;
+  }
+
+  if (_authMode === 'signup') {
+    okEl.textContent = 'Check your email for a confirmation link!';
+    okEl.classList.remove('hidden');
+    setTimeout(() => {
+      closeAuth();
+      isSignedIn = true;
+      updateNavForAuth(true, email);
+      switchView('dashboard');
+    }, 1400);
+  } else {
+    closeAuth();
+    isSignedIn = true;
+    updateNavForAuth(true, email);
+    switchView('dashboard');
+  }
+}
+
+function handleStart() {
+  if (isSignedIn) { switchView('dashboard'); }
+  else { openAuth('signup'); }
+}
+
+function handleSignOut() {
+  isSignedIn = false;
+  updateNavForAuth(false, '');
+  switchView('landing');
+  toast('Signed out.', 'info');
+}
+
+function updateNavForAuth(signedIn, email) {
+  const e = (id, show) => document.getElementById(id)?.classList.toggle('hidden', !show);
+  e('btn-signin-landing',   !signedIn);
+  e('btn-start-landing',    !signedIn);
+  e('btn-signout-landing',  signedIn);
+  e('nav-dashboard',        signedIn);
+  e('nav-user-email',       signedIn);
+  const navEmail = document.getElementById('nav-user-email');
+  if (navEmail) navEmail.textContent = email;
+}
+
+// ─── Dashboard rendering ─────────────────────────────
+function renderDashboard() {
+  const scans = MOCK_SCANS;
+  const list  = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  const count = document.getElementById('history-count');
+
+  const highCount = scans.reduce((n, s) => n + (s.reportData?.zones?.filter(z => z.risk === 'high').length || 0), 0);
+  document.getElementById('dash-high-risks').textContent = highCount;
+  document.getElementById('dash-total').textContent = scans.length;
+  count.textContent = scans.length + ' scan' + (scans.length !== 1 ? 's' : '');
+
+  if (!scans.length) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  const riskOrder = { high: 0, med: 1, medium: 1, low: 2 };
+  const riskClass = { high: 'high', med: 'med', medium: 'med', low: 'low' };
+  const riskLabel = { high: 'High risk', med: 'Med risk', medium: 'Med risk', low: 'Low risk' };
+
+  list.innerHTML = scans.map(s => {
+    const rc  = riskClass[s.risk] || 'low';
+    const rl  = riskLabel[s.risk] || s.risk;
+    const dt  = s.date ? new Date(s.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '';
+    const zones = s.reportData?.zones || [];
+    const miniDots = zones.slice(0,6).map(z =>
+      `<div style="width:6px;height:6px;border-radius:50%;background:var(--${riskClass[z.risk] || 'low'});opacity:0.8" title="${z.name}: ${z.risk}"></div>`
+    ).join('');
+
+    return `
+      <div class="history-item" onclick="viewReport('${s.id}')">
+        <div class="history-risk-bar ${rc}"></div>
+        <div class="history-info">
+          <div class="history-name">${escHtml(s.filename)}</div>
+          <div class="history-meta">${dt} &nbsp;·&nbsp; <span style="color:var(--${rc})">${rl}</span></div>
+        </div>
+        <div class="history-zones">${miniDots}</div>
+        <div class="history-arrow">›</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── Report viewer ────────────────────────────────────
+function viewReport(id) {
+  const scan = MOCK_SCANS.find(s => s.id === id);
+  if (!scan || !scan.reportData) { toast('Report not found', 'error'); return; }
+  const d = scan.reportData;
+
+  document.getElementById('report-title').textContent   = 'Analysis Report';
+  document.getElementById('report-filename').textContent = scan.filename;
+
+  const ovBadge = document.getElementById('report-overall-badge');
+  const rClass  = d.overall === 'high' ? 'risk-high' : d.overall === 'med' || d.overall === 'medium' ? 'risk-med' : 'risk-low';
+  ovBadge.className = `risk-badge ${rClass}`;
+  ovBadge.innerHTML = `<span class="risk-dot"></span>${d.overall.toUpperCase()}`;
+
+  const riskBadge = r => {
+    const c = r === 'high' ? 'risk-high' : r === 'med' || r === 'medium' ? 'risk-med' : 'risk-low';
+    return `<span class="risk-badge ${c}" style="font-size:10px"><span class="risk-dot"></span>${r.toUpperCase()}</span>`;
+  };
+
+  document.getElementById('report-scorecard').innerHTML = d.zones.map(z => `
+    <div class="sc-cell">
+      <div class="sc-name">${escHtml(z.name)}</div>
+      ${riskBadge(z.risk)}
+      <div class="sc-finding">${escHtml(z.note)}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('report-actions').innerHTML = d.actions.map((a, i) => `
+    <div class="report-action">
+      <span class="ra-num">${i + 1}.</span>
+      <span class="ra-text">${escHtml(a)}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('report-modal').classList.remove('hidden');
+}
+
+function closeReport() {
+  document.getElementById('report-modal').classList.add('hidden');
+}
+
+// ─── Upload simulation ────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  const file = e.dataTransfer?.files[0];
+  if (file) handleUpload(file);
+}
+
+function handleUpload(file) {
+  if (!file) return;
+  const zone   = document.getElementById('upload-zone');
+  const status = document.getElementById('upload-status');
+  const fname  = document.getElementById('upload-filename-display');
+  const msg    = document.getElementById('upload-msg');
+
+  zone.classList.add('hidden');
+  status.classList.remove('hidden');
+  fname.textContent = file.name;
+
+  const steps = ['Extracting text…', 'Checking 6 danger zones…', 'Generating report…', 'Sending to your email…'];
+  let i = 0;
+  msg.textContent = steps[0];
+
+  const interval = setInterval(() => {
+    i++;
+    if (i < steps.length) {
+      msg.textContent = steps[i];
+    } else {
+      clearInterval(interval);
+      msg.textContent = 'Analysis complete!';
+      document.getElementById('upload-spinner').style.borderTopColor = 'var(--low)';
+      toast('Report ready — check your email.', 'success');
+      setTimeout(() => {
+        status.classList.add('hidden');
+        zone.classList.remove('hidden');
+      }, 2000);
+    }
+  }, 900);
+}
+
+// ─── Toast ────────────────────────────────────────────
+let _toastTimer;
+function toast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show t-' + type;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { t.className = ''; }, 3800);
+}
+
+// ─── Stripe stub ─────────────────────────────────────
+function subscribe(tier) {
+  if (!isSignedIn) { openAuth('signup'); return; }
+  toast('Redirecting to checkout…', 'info');
+}
+
+// ─── Helpers ─────────────────────────────────────────
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ─── Keyboard shortcuts ───────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeAuth();
+    closeReport();
+    if (tweaksOpen) { tweaksOpen = false; document.getElementById('tweaks-panel').classList.add('hidden'); }
+  }
+});
+['auth-modal','report-modal'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('click', e => { if (e.target === el) { closeAuth(); closeReport(); } });
+});
+</script>
+</body>
+</html>

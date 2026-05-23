@@ -542,14 +542,18 @@ def _compute_overall_risk(analysis: dict) -> str:
 
 
 def _esc(text: str) -> str:
-    return (text.replace("&", "&amp;").replace("<", "&lt;")
-                .replace(">", "&gt;").replace('"', "&quot;"))
+    """HTML-escape text using stdlib (handles all five characters: & < > \" ')."""
+    import html
+    return html.escape(str(text), quote=True)
 
 
 def save_report(html: str, output_dir: str | Path,
-                filename: str = "report.html") -> Path:
+                filename: str | None = None) -> Path:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    if filename is None:
+        from .security import generate_report_id
+        filename = f"report_{generate_report_id()}.html"
     filepath = output_dir / filename
     filepath.write_text(html, encoding="utf-8")
     return filepath

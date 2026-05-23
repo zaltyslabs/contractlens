@@ -17,13 +17,15 @@ venv/
 *.swo
 
 # Contract uploads (user data)
-uploads/
+backend/uploads/*
+!backend/uploads/.gitkeep
 *.pdf
 *.docx
-!samples/*.pdf
+!backend/samples/*.pdf
 
 # Output
-output/
+backend/output/*
+!backend/output/.gitkeep
 
 # OS
 .DS_Store
@@ -32,5 +34,5 @@ Thumbs.db
 # Secrets
 .env
 *.secret
-site/config.js
+frontend/config.js
 supabase/.temp/

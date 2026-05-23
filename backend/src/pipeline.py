@@ -16,6 +16,7 @@ Security:
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -164,6 +165,13 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # Validate email format if provided
+    if args.email:
+        email_re = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+        if not email_re.match(args.email):
+            print(f"❌ Invalid email address: {args.email}", file=sys.stderr)
+            sys.exit(1)
 
     # Cleanup mode
     if args.cleanup is not None:

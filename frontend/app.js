@@ -48,9 +48,9 @@ async function getUser() {
 function showEl(id) { const el = document.getElementById(id); if (el) el.classList.remove('hidden'); }
 function hideEl(id) { const el = document.getElementById(id); if (el) el.classList.add('hidden'); }
 
-function setHTML(id, html) {
+function setText(id, text) {
   const el = document.getElementById(id);
-  if (el) el.innerHTML = html;
+  if (el) el.textContent = text;
 }
 
 function showToast(msg, type = 'success') {
@@ -71,32 +71,15 @@ function showToast(msg, type = 'success') {
 
 // ── Auth state observer ──
 
-let _authReady = false;
-let _pageLoadTime = Date.now();
-
 supabaseClient.auth.onAuthStateChange((event, session) => {
-  // Ignore all events during the first 2 seconds (prevents navigation loops)
-  const pageAge = Date.now() - _pageLoadTime;
-  if (pageAge < 2000 && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-    _authReady = !!session;
-    return;
-  }
-
-  if (event === 'INITIAL_SESSION') {
-    _authReady = true;
-    return;
-  }
-
   if (event === 'SIGNED_IN') {
-    _authReady = true;
     if (!window.location.pathname.includes('dashboard')) {
       window.location.href = '/dashboard.html';
     }
   }
 
   if (event === 'SIGNED_OUT') {
-    _authReady = false;
-    if (!window.location.pathname.includes('index.html')) {
+    if (window.location.pathname.includes('dashboard')) {
       window.location.href = '/index.html';
     }
   }

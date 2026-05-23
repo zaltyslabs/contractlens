@@ -10,16 +10,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@13.11.0?target=deno";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
   try {
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
       apiVersion: "2023-10-16",
@@ -36,7 +27,6 @@ serve(async (req) => {
     } catch (err) {
       return new Response(`Webhook signature verification failed: ${err.message}`, {
         status: 400,
-        headers: corsHeaders,
       });
     }
 
@@ -51,11 +41,24 @@ serve(async (req) => {
       case "checkout.session.completed": {
         const session = event.data.object;
         const customerEmail = session.customer_details?.email;
-        const metadata = session.metadata || {};
-        const tier = metadata.tier || "side_hustler";
 
         if (!customerEmail) {
           console.log("No email in session, skipping");
+          break;
+        }
+
+        const subscriptionId = session.subscription as string;
+        if (!subscriptionId) {
+          console.log("No subscription in session, skipping");
+          break;
+        }
+
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const priceId = subscription.items?.data?.[0]?.price?.id;
+        const tier = getTierFromPriceId(priceId);
+
+        if (!tier) {
+          console.log(`Unknown price ID: ${priceId}, skipping`);
           break;
         }
 
@@ -128,13 +131,13 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("Webhook error:", err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
     });
   }
 });
