@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data:; connect-src 'self' https://twqrvznvedfbzobutwcb.supabase.co https://api.stripe.com; frame-src https://buy.stripe.com https://js.stripe.com; font-src 'self'">
 <title>Dashboard — ContractLens</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com" integrity="sha384-igm5BeiBt36UU4gqwWS7imYmelpTsZlQ45FZf+XBn9MuJbn4nQr7yx1yFydocC/K"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" integrity="sha384-dzQgxMPp/h+N0t5qDf6Bp516wKZr3pXgGMpA7/ZM6tiWkqYo90N060L03dxnZ8Tf"></script>
 <script>
   tailwind.config = {
     theme: {
@@ -121,13 +122,7 @@
 <script>
   // ── Auth guard ──
   (async () => {
-    let session = null;
-    for (let i = 0; i < 5; i++) {
-      const { data } = await supabaseClient.auth.getSession();
-      session = data.session;
-      if (session) break;
-      await new Promise(r => setTimeout(r, 300));
-    }
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) { window.location.href = '/index.html'; return; }
 
     const user = session.user;
@@ -179,10 +174,17 @@
     // Show/hide upgrade banner
     const banner = document.getElementById('upgrade-banner');
     if (userProfile.subscription_tier !== 'free') {
-      banner.innerHTML = `
-        <h3 class="font-bold text-white mb-1">✅ You're on the ${tierNames[userProfile.subscription_tier]} plan</h3>
-        <p class="text-gray-400 text-sm">${userProfile.scans_limit} scans/month. <a href="/index.html#pricing" class="text-brand-500 hover:text-brand-400">Upgrade</a> for more.</p>
-      `;
+      const h3 = document.createElement('h3');
+      h3.className = 'font-bold text-white mb-1';
+      h3.textContent = `✅ You're on the ${tierNames[userProfile.subscription_tier]} plan`;
+      const p = document.createElement('p');
+      p.className = 'text-gray-400 text-sm';
+      const upgradeLink = document.createElement('a');
+      upgradeLink.href = '/index.html#pricing';
+      upgradeLink.className = 'text-brand-500 hover:text-brand-400';
+      upgradeLink.textContent = 'Upgrade';
+      p.append(`${userProfile.scans_limit} scans/month. `, upgradeLink, ' for more.');
+      banner.replaceChildren(h3, p);
     }
   }
 
@@ -224,6 +226,15 @@
     `).join('');
   }
 
+  const zoneNames = {
+    payment_terms:    'Payment Terms',
+    ip_ownership:     'IP & Ownership',
+    non_compete:      'Non-Compete',
+    termination:      'Termination',
+    indemnification:  'Indemnification',
+    liability_caps:   'Liability Caps',
+  };
+
   async function handleUpload(file) {
     if (!file) return;
     const zone = document.getElementById('upload-zone');
@@ -231,51 +242,76 @@
     zone.classList.add('hidden');
     status.classList.remove('hidden');
     document.getElementById('upload-filename').textContent = file.name;
-
-    // Simulate upload + processing
     document.getElementById('upload-msg').textContent = 'Uploading...';
 
-    // Store scan record
-    const scans = JSON.parse(localStorage.getItem('contractlens_scans') || '[]');
-    const newScan = {
-      id: Date.now().toString(),
-      filename: file.name,
-      date: new Date().toISOString(),
-      risk: 'pending',
-      status: 'processing',
-      reportUrl: null
-    };
-    scans.push(newScan);
-    localStorage.setItem('contractlens_scans', JSON.stringify(scans));
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const email = session?.user?.email || '';
+      const userId = session?.user?.id || '';
 
-    // Simulate processing delay then redirect to result
-    setTimeout(() => {
-      newScan.status = 'done';
-      newScan.risk = ['low', 'medium', 'high'][Math.floor(Math.random() * 3)];
-      // Store sample report data
-      newScan.reportData = {
-        summary: `Analysis of ${file.name} complete. This contract contains standard terms with some areas to review carefully.`,
-        zones: [
-          { name: 'Payment Terms', risk: newScan.risk, note: newScan.risk === 'high' ? '⚠️ Net-60 payment terms — negotiate for net-30.' : 'Payment terms appear reasonable.' },
-          { name: 'IP & Ownership', risk: 'medium', note: 'Work-for-hire clause present. Confirm portfolio rights.' },
-          { name: 'Non-Compete', risk: newScan.risk, note: newScan.risk === 'high' ? '⚠️ Broad non-compete clause — seek to narrow scope.' : 'No restrictive covenants found.' },
-          { name: 'Termination', risk: 'low', note: 'Standard 30-day notice period.' },
-          { name: 'Indemnification', risk: 'medium', note: 'Mutual indemnification with standard carve-outs.' },
-          { name: 'Liability Caps', risk: 'medium', note: 'Capped at fees paid. Consider increasing the cap.' },
-        ]
-      };
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('email', email);
+      if (userId) formData.append('user_id', userId);
+
+      document.getElementById('upload-msg').textContent = 'Analyzing contract… this may take 30–60 seconds.';
+
+      const apiUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_URL)
+        ? CONFIG.API_URL
+        : 'http://127.0.0.1:8123';
+
+      const response = await fetch(`${apiUrl}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ detail: 'Upload failed' }));
+        throw new Error(err.detail || 'Upload failed');
+      }
+
+      const result = await response.json();
+
+      // Persist scan to localStorage for history and modal viewer
+      const scans = JSON.parse(localStorage.getItem('contractlens_scans') || '[]');
+      scans.push({
+        id: Date.now().toString(),
+        filename: file.name,
+        date: new Date().toISOString(),
+        risk: result.risk,
+        status: 'done',
+        reportUrl: result.report_url,
+        reportData: {
+          summary: `Analysis complete. Overall risk: ${result.risk.toUpperCase()}.`,
+          zones: Object.entries(result.zones || {}).map(([key, data]) => ({
+            name: zoneNames[key] || key,
+            risk: data.risk,
+            note: data.summary,
+          })),
+          actions: result.recommendations || [],
+        },
+      });
       localStorage.setItem('contractlens_scans', JSON.stringify(scans));
 
       document.getElementById('upload-msg').textContent = 'Analysis complete!';
       document.getElementById('upload-spinner').classList.add('hidden');
-      showToast('Report ready! Check your email.', 'success');
+      showToast(`Report ready — sent to ${email}.`, 'success');
 
       setTimeout(() => {
         status.classList.add('hidden');
         zone.classList.remove('hidden');
         loadDashboard();
       }, 2000);
-    }, 3000);
+
+    } catch (error) {
+      document.getElementById('upload-msg').textContent = `Error: ${error.message}`;
+      document.getElementById('upload-spinner').classList.add('hidden');
+      showToast(error.message, 'error');
+      setTimeout(() => {
+        status.classList.add('hidden');
+        zone.classList.remove('hidden');
+      }, 3000);
+    }
   }
 
   // Drag and drop

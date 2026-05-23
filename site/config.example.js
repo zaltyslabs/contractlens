@@ -14,5 +14,10 @@ const CONFIG = {
     side_hustler:     "https://buy.stripe.com/test_XXXX",
     power_freelancer: "https://buy.stripe.com/test_XXXX",
     agency:           "https://buy.stripe.com/test_XXXX",
-  }
+  },
+
+  // FastAPI backend URL (no trailing slash)
+  // Development: http://127.0.0.1:8123
+  // Production:  https://api.yourdomain.com
+  API_URL: "http://127.0.0.1:8123",
 };
