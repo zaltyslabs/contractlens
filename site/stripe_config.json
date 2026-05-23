@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Side Hustler",
+    "product_id": "prod_UZSQYZHj808q5S",
+    "price_id": "price_1TaJVTRNLvxcQdtwhyN6WhI9",
+    "price": 1200,
+    "tier": "side_hustler"
+  },
+  {
+    "name": "Power Freelancer",
+    "product_id": "prod_UZSQi9K25PKI8A",
+    "price_id": "price_1TaJVaRNLvxcQdtwU2uAwGPj",
+    "price": 2500,
+    "tier": "power_freelancer"
+  },
+  {
+    "name": "Agency",
+    "product_id": "prod_UZSQxqjUGTMTMj",
+    "price_id": "price_1TaJVfRNLvxcQdtwOZeV74j6",
+    "price": 4900,
+    "tier": "agency"
+  }
+]

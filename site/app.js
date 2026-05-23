@@ -1,25 +1,31 @@
-// ContractLens — Shared Supabase Client
-const SUPABASE_URL = "https://twqrvznvedfbzobutwcb.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_QrEmI14c8K4p0XanRlbX3A_HygK_dM1";
+// ContractLens — Shared Client
+// Requires config.js to be loaded BEFORE this file
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+// ── Stripe ──
+function subscribe(tier) {
+  const url = CONFIG.STRIPE_LINKS[tier];
+  if (!url) { showToast("Plan not available yet", "error"); return; }
+  window.location.href = url;
+}
 
 // ── Auth helpers ──
 
 async function signUp(email, password) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabaseClient.auth.signUp({ email, password });
   if (error) throw error;
   return data;
 }
 
 async function signIn(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;
 }
 
 async function signInMagicLink(email) {
-  const { data, error } = await supabase.auth.signInWithOtp({
+  const { data, error } = await supabaseClient.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: window.location.origin + "/dashboard.html" }
   });
@@ -28,12 +34,12 @@ async function signInMagicLink(email) {
 }
 
 async function signOut() {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   window.location.href = "/index.html";
 }
 
 async function getUser() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   return user;
 }
 
@@ -65,7 +71,7 @@ function showToast(msg, type = 'success') {
 
 // ── Auth state observer ──
 
-supabase.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && window.location.pathname.includes('index.html')) {
     window.location.href = '/dashboard.html';
   }
