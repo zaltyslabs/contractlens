@@ -34,7 +34,8 @@
     <a href="/" class="text-lg font-bold text-white">📋 ContractLens</a>
     <div class="flex gap-3 items-center">
       <span id="nav-user" class="hidden text-sm text-gray-400"></span>
-      <button onclick="openAuth('signup')" id="btn-signup" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Get Started Free</button>
+      <a href="/dashboard.html" id="btn-dashboard" class="hidden text-gray-300 hover:text-white text-sm font-medium transition">Dashboard</a>
+      <button onclick="handleFreeStart()" id="btn-signup" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Get Started Free</button>
       <button onclick="openAuth('signin')" id="btn-signin" class="text-gray-300 hover:text-white text-sm font-medium transition">Sign In</button>
       <button onclick="signOut()" id="btn-signout" class="hidden text-gray-300 hover:text-white text-sm transition">Sign Out</button>
     </div>
@@ -52,7 +53,7 @@
     Know what you're actually signing — without paying a lawyer $500.
   </p>
   <div class="flex gap-3 justify-center flex-wrap">
-    <button onclick="openAuth('signup')" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-xl font-bold text-lg transition shadow-lg shadow-brand-500/25">Try Free →</button>
+    <button onclick="handleFreeStart()" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-xl font-bold text-lg transition shadow-lg shadow-brand-500/25">Try Free →</button>
     <button onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})" class="border border-gray-700 hover:border-gray-500 text-gray-300 px-6 py-3 rounded-xl font-semibold text-lg transition">View Pricing</button>
   </div>
   <p class="text-xs text-gray-600 mt-4">No credit card required. Free first scan.</p>
@@ -110,7 +111,7 @@
         <li>✓ HTML report</li>
         <li>✓ Email delivery</li>
       </ul>
-      <button onclick="openAuth('signup')" class="mt-auto w-full border border-brand-500 text-brand-500 hover:bg-brand-500 hover:text-white py-2.5 rounded-lg font-semibold text-sm transition">Get Started</button>
+      <button onclick="handleFreeStart()" class="mt-auto w-full border border-brand-500 text-brand-500 hover:bg-brand-500 hover:text-white py-2.5 rounded-lg font-semibold text-sm transition">Get Started</button>
     </div>
 
     <!-- Side Hustler -->
@@ -192,6 +193,21 @@
 <script src="app.js"></script>
 <script>
   let authMode = 'signup';
+  let currentUser = null;
+
+  function goToDashboard() {
+    window.location.href = '/dashboard.html';
+  }
+
+  // Smart free start: if logged in → dashboard, else → auth modal
+  async function handleFreeStart() {
+    const user = currentUser || await getUser();
+    if (user) {
+      goToDashboard();
+    } else {
+      openAuth('signup');
+    }
+  }
 
   function openAuth(mode) {
     authMode = mode;
@@ -230,7 +246,7 @@
         okEl.classList.remove('hidden');
       } else {
         await signIn(email, password);
-        window.location.href = '/dashboard.html';
+        goToDashboard();
       }
     } catch (e) {
       errEl.textContent = e.message || 'Authentication failed.';
@@ -238,15 +254,34 @@
     }
   }
 
-  // Check auth on load
+  function showLoggedInUI(user) {
+    currentUser = user;
+    document.getElementById('btn-signup').classList.add('hidden');
+    document.getElementById('btn-signin').classList.add('hidden');
+    document.getElementById('btn-signout').classList.remove('hidden');
+    document.getElementById('btn-dashboard').classList.remove('hidden');
+    document.getElementById('nav-user').textContent = user.email;
+    document.getElementById('nav-user').classList.remove('hidden');
+  }
+
+  function showLoggedOutUI() {
+    currentUser = null;
+    document.getElementById('btn-signup').classList.remove('hidden');
+    document.getElementById('btn-signin').classList.remove('hidden');
+    document.getElementById('btn-signout').classList.add('hidden');
+    document.getElementById('btn-dashboard').classList.add('hidden');
+    document.getElementById('nav-user').classList.add('hidden');
+  }
+
+  // Check auth on load — handles email confirmation redirects
   (async () => {
-    const user = await getUser();
-    if (user) {
-      document.getElementById('btn-signup').classList.add('hidden');
-      document.getElementById('btn-signin').classList.add('hidden');
-      document.getElementById('btn-signout').classList.remove('hidden');
-      document.getElementById('nav-user').textContent = user.email;
-      document.getElementById('nav-user').classList.remove('hidden');
+    try {
+      const user = await getUser();
+      if (user) {
+        showLoggedInUI(user);
+      }
+    } catch(e) {
+      // Not logged in — that's fine
     }
   })();
 

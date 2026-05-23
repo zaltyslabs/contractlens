@@ -105,6 +105,17 @@
 
 </main>
 
+<!-- REPORT MODAL -->
+<div id="report-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-bold text-white" id="report-modal-title">Report</h3>
+      <button onclick="closeReport()" class="text-gray-500 hover:text-white text-xl">&times;</button>
+    </div>
+    <div id="report-modal-body" class="text-sm text-gray-300 space-y-4"></div>
+  </div>
+</div>
+
 <script src="config.js"></script>
 <script src="app.js"></script>
 <script>
@@ -151,7 +162,7 @@
           <span class="text-xs ${s.status === 'done' ? 'text-green-400' : 'text-amber-400'}">${s.status === 'done' ? 'Complete' : 'Processing'}</span>
         </td>
         <td class="px-4 py-3">
-          ${s.status === 'done' ? `<a href="${s.reportUrl || '#'}" class="text-brand-500 hover:text-brand-400 text-xs font-medium">View →</a>` : '<span class="text-gray-700 text-xs">—</span>'}
+          ${s.status === 'done' ? `<button onclick="viewReport('${s.id}')" class="text-brand-500 hover:text-brand-400 text-xs font-medium cursor-pointer bg-transparent border-0">View →</button>` : '<span class="text-gray-700 text-xs">—</span>'}
         </td>
       </tr>
     `).join('');
@@ -184,8 +195,19 @@
     // Simulate processing delay then redirect to result
     setTimeout(() => {
       newScan.status = 'done';
-      newScan.risk = ['low', 'medium', 'high'][Math.floor(Math.random() * 3)]; // Placeholder
-      newScan.reportUrl = '#';
+      newScan.risk = ['low', 'medium', 'high'][Math.floor(Math.random() * 3)];
+      // Store sample report data
+      newScan.reportData = {
+        summary: `Analysis of ${file.name} complete. This contract contains standard terms with some areas to review carefully.`,
+        zones: [
+          { name: 'Payment Terms', risk: newScan.risk, note: newScan.risk === 'high' ? '⚠️ Net-60 payment terms — negotiate for net-30.' : 'Payment terms appear reasonable.' },
+          { name: 'IP & Ownership', risk: 'medium', note: 'Work-for-hire clause present. Confirm portfolio rights.' },
+          { name: 'Non-Compete', risk: newScan.risk, note: newScan.risk === 'high' ? '⚠️ Broad non-compete clause — seek to narrow scope.' : 'No restrictive covenants found.' },
+          { name: 'Termination', risk: 'low', note: 'Standard 30-day notice period.' },
+          { name: 'Indemnification', risk: 'medium', note: 'Mutual indemnification with standard carve-outs.' },
+          { name: 'Liability Caps', risk: 'medium', note: 'Capped at fees paid. Consider increasing the cap.' },
+        ]
+      };
       localStorage.setItem('contractlens_scans', JSON.stringify(scans));
 
       document.getElementById('upload-msg').textContent = 'Analysis complete!';
@@ -216,6 +238,53 @@
     d.textContent = s;
     return d.innerHTML;
   }
+
+  function viewReport(scanId) {
+    const scans = JSON.parse(localStorage.getItem('contractlens_scans') || '[]');
+    const scan = scans.find(s => s.id === scanId);
+    if (!scan || !scan.reportData) {
+      showToast('Report data not available', 'error');
+      return;
+    }
+
+    const d = scan.reportData;
+    document.getElementById('report-modal-title').textContent = `Report: ${scan.filename}`;
+    
+    const riskColors = { high: 'text-red-400', medium: 'text-amber-400', low: 'text-green-400' };
+    const riskEmoji = { high: '🔴', medium: '🟡', low: '🟢' };
+
+    let zonesHtml = d.zones.map(z => `
+      <div class="border border-gray-800 rounded-lg p-3">
+        <div class="flex justify-between items-center mb-1">
+          <span class="font-semibold text-white">${escHtml(z.name)}</span>
+          <span class="text-xs font-bold uppercase ${riskColors[z.risk] || 'text-gray-400'}">${riskEmoji[z.risk] || ''} ${z.risk}</span>
+        </div>
+        <p class="text-gray-400 text-xs">${escHtml(z.note)}</p>
+      </div>
+    `).join('');
+
+    document.getElementById('report-modal-body').innerHTML = `
+      <div class="bg-gray-800 rounded-lg p-4 mb-4">
+        <p class="text-white font-medium mb-1">Summary</p>
+        <p class="text-gray-400">${escHtml(d.summary)}</p>
+      </div>
+      <p class="text-gray-500 text-xs uppercase mb-2">Zone Analysis</p>
+      ${zonesHtml}
+      <p class="text-gray-600 text-xs mt-4 text-center">⚠️ Not legal advice. Full report delivered via email.</p>
+    `;
+
+    document.getElementById('report-modal').classList.remove('hidden');
+  }
+
+  function closeReport() {
+    document.getElementById('report-modal').classList.add('hidden');
+  }
+
+  // Close report modal on escape
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeReport(); });
+  document.getElementById('report-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('report-modal')) closeReport();
+  });
 </script>
 
 </body>

@@ -72,10 +72,12 @@ function showToast(msg, type = 'success') {
 // ── Auth state observer ──
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && window.location.pathname.includes('index.html')) {
+  // Only redirect on fresh sign-in (not initial session restore)
+  if (event === 'SIGNED_IN' && !window._authInitialCheck) {
     window.location.href = '/dashboard.html';
   }
   if (event === 'SIGNED_OUT') {
     window.location.href = '/index.html';
   }
+  window._authInitialCheck = true;
 });
