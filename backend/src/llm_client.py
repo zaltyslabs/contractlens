@@ -111,26 +111,57 @@ async def analyze_contract(contract_text: str) -> dict:
 
 
 def _parse_llm_json(raw: str) -> dict:
-    """Parse LLM response, handling markdown code fences."""
+    """Parse LLM response with multiple fallback strategies.
+
+    Handles: markdown code fences, greedy regex, unescaped control chars,
+    and common LLM output quirks.
+    """
     text = raw.strip()
 
-    # Strip opening fence (```json or ```)
+    # Strategy 1: Strip markdown code fences
     if text.startswith("```"):
         text = text.split("\n", 1)[-1] if "\n" in text else text[3:]
         if text.endswith("```"):
             text = text[:-3]
     text = text.strip()
 
+    # Strategy 2: Direct parse
     try:
         return json.loads(text)
     except json.JSONDecodeError:
+        pass
+
+    # Strategy 3: Non-greedy regex extraction
+    match = re.search(r"\{.*?\}(?=\s*$)", text, re.DOTALL)
+    if not match:
         match = re.search(r"\{.*\}", text, re.DOTALL)
-        if match:
+
+    if match:
+        candidate = match.group()
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            # Strategy 4: Sanitize common control character issues
+            sanitized = (
+                candidate
+                .replace("\t", "\\t")
+                .replace("\r", "")
+            )
             try:
-                return json.loads(match.group())
+                return json.loads(sanitized)
             except json.JSONDecodeError:
                 pass
-        raise ValueError(
-            f"Failed to parse LLM response as JSON. "
-            f"Response preview: {text[:300]}..."
-        )
+
+    # Strategy 5: Try to find the outermost braces manually
+    start = text.find("{")
+    end = text.rfind("}")
+    if start >= 0 and end > start:
+        try:
+            return json.loads(text[start:end + 1])
+        except json.JSONDecodeError:
+            pass
+
+    raise ValueError(
+        f"Failed to parse LLM response as JSON after 5 strategies. "
+        f"Response preview: {text[:300]}..."
+    )

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<title>ContractLens — Acme Corp — Independent Contractor Agreement</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f8fafc;
+    --surface-hover: #f1f5f9;
+    --text: #1e293b;
+    --text-heading: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --clause-bg: #f1f5f9;
+    --clause-text: #475569;
+    --footer-text: #94a3b8;
+    --disclaimer-bg: #fef2f2;
+    --disclaimer-border: #fecaca;
+    --disclaimer-text: #991b1b;
+    --score-bg: #e2e8f0;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1120;
+      --surface: #111827;
+      --surface-hover: #1a2332;
+      --text: #d1d5db;
+      --text-heading: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border: #1f2937;
+      --clause-bg: #0f172a;
+      --clause-text: #9ca3af;
+      --footer-text: #6b7280;
+      --disclaimer-bg: #3b1010;
+      --disclaimer-border: #5c1a1a;
+      --disclaimer-text: #fca5a5;
+      --score-bg: #1f2937;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 1.5rem;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+
+  /* ── Header ── */
+  .report-header {
+    text-align: center;
+    padding: 2rem 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .report-header .logo {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+  }
+  .report-header h1 {
+    font-size: 1.5rem;
+    color: var(--text-heading);
+    margin-bottom: 0.25rem;
+  }
+  .report-header .doc-name {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  /* ── Risk Badge ── */
+  .risk-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 1.2rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.03em;
+  }
+  .risk-pill.low    { background: #22c55e18; border:1.5px solid #22c55e55; color:#16a34a; }
+  .risk-pill.medium { background: #f59e0b18; border:1.5px solid #f59e0b55; color:#d97706; }
+  .risk-pill.high   { background: #ef444418; border:1.5px solid #ef444455; color:#dc2626; }
+  @media (prefers-color-scheme: dark) {
+    .risk-pill.low    { color:#4ade80; }
+    .risk-pill.medium { color:#fbbf24; }
+    .risk-pill.high   { color:#f87171; }
+  }
+
+  /* ── Disclaimer ── */
+  .disclaimer {
+    background: var(--disclaimer-bg);
+    border: 1px solid var(--disclaimer-border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    color: var(--disclaimer-text);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  /* ── Meta Card ── */
+  .meta-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--card-shadow);
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+  }
+  .meta-item { min-width: 120px; }
+  .meta-item .label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.15rem;
+  }
+  .meta-item .value {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+
+  /* ── Executive Summary ── */
+  .exec-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+  }
+  .exec-summary h2 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+  .exec-summary .big-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .exec-summary .highlight-boxes {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .highlight-chip {
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .highlight-chip.high   { background: #ef444415; color: #dc2626; }
+  .highlight-chip.medium { background: #f59e0b15; color: #d97706; }
+  .highlight-chip.low    { background: #22c55e15; color: #16a34a; }
+  @media (prefers-color-scheme: dark) {
+    .highlight-chip.high   { color: #f87171; }
+    .highlight-chip.medium { color: #fbbf24; }
+    .highlight-chip.low    { color: #4ade80; }
+  }
+
+  /* ── Scoreboard Grid ── */
+  .scoreboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    border-left: 3px solid var(--border);
+    box-shadow: var(--card-shadow);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .score-card.risk-low    { border-left-color: #22c55e; }
+  .score-card.risk-medium { border-left-color: #f59e0b; }
+  .score-card.risk-high   { border-left-color: #ef4444; }
+  .score-card .sc-icon  { font-size: 1.2rem; margin-bottom: 0.3rem; }
+  .score-card .sc-name  { font-weight: 700; font-size: 0.9rem; color: var(--text-heading); margin-bottom: 0.15rem; }
+  .score-card .sc-risk  { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .score-card .sc-risk.low    { color: #16a34a; }
+  .score-card .sc-risk.medium { color: #d97706; }
+  .score-card .sc-risk.high   { color: #dc2626; }
+  .score-card .sc-tldr {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media (prefers-color-scheme: dark) {
+    .score-card .sc-risk.low    { color: #4ade80; }
+    .score-card .sc-risk.medium { color: #fbbf24; }
+    .score-card .sc-risk.high   { color: #f87171; }
+  }
+
+  /* ── Zone Detail Cards ── */
+  .section-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+  .zone-detail {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    box-shadow: var(--card-shadow);
+  }
+  .zone-detail .zd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+  }
+  .zone-detail .zd-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-heading);
+  }
+  .zone-detail .zd-summary {
+    color: var(--text);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+  }
+  .zone-detail .zd-clauses {
+    margin-bottom: 0.75rem;
+  }
+  .clause-block {
+    background: var(--clause-bg);
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.4rem;
+    font-family: 'SF Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--clause-text);
+    border-left: 3px solid var(--border);
+    line-height: 1.45;
+  }
+  .clause-block strong {
+    display: block;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+  }
+  .zone-detail .zd-recs {
+    background: var(--clause-bg);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+  }
+  .zone-detail .zd-recs h4 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+  .zone-detail .zd-recs li {
+    font-size: 0.85rem;
+    margin-left: 1.2rem;
+    margin-bottom: 0.2rem;
+    color: var(--text);
+  }
+
+  /* ── Footer ── */
+  .report-footer {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+    color: var(--footer-text);
+    font-size: 0.75rem;
+    border-top: 1px solid var(--border);
+    margin-top: 1.5rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="report-header">
+    <div class="logo">📋 ContractLens</div>
+    <h1>Contract Analysis Report</h1>
+    <p class="doc-name">Acme Corp — Independent Contractor Agreement</p>
+    <span class="risk-pill high">
+      🔴 Overall Risk: HIGH
+    </span>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    ⚠️ <strong>Not legal advice.</strong> AI-generated analysis for informational purposes only.
+    Consult a qualified attorney before signing.
+  </div>
+
+  <!-- META -->
+  <div class="meta-card">
+    <div class="meta-row">
+      <div class="meta-item">
+        <div class="label">Parties</div>
+        <div class="value">Acme Corp, a Delaware corporation (&quot;Client&quot;),, Jane Developer</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Date</div>
+        <div class="value">January 15, 2025</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Pages</div>
+        <div class="value">~2</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Analyzed</div>
+        <div class="value">May 23, 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXECUTIVE SUMMARY -->
+  <div class="exec-summary">
+    <h2>📊 Executive Summary</h2>
+    <div class="big-number" style="color:#ef4444">
+      3<span style="font-size:1rem;font-weight:400;color:var(--text-muted);">/6 high-risk zones</span>
+    </div>
+    <p style="margin-top:0.5rem;font-size:0.9rem;color:var(--text);">This contract has 3 high-risk areas that need attention: IP & Ownership, Non-Compete, Indemnification. 2 more zones have moderate concerns (Payment Terms, Liability Caps). Several clauses should be renegotiated before signing.</p>
+    <div class="highlight-boxes">
+      <span class="highlight-chip high">3 High Risk</span>
+      <span class="highlight-chip medium">2 Medium</span>
+      <span class="highlight-chip low">1 Low</span>
+    </div>
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div class="section-label">At a Glance</div>
+  <div class="scoreboard">
+    <div class="score-card risk-medium">
+    <div class="sc-icon">💰</div>
+    <div class="sc-name">Payment Terms</div>
+    <div class="sc-risk medium">medium</div>
+    <div class="sc-tldr">You'll be paid $150/hour, which is good. But invoices are paid net-45 — meaning you wait 45 days after submitting each i</div>
+  </div>
+<div class="score-card risk-high">
+    <div class="sc-icon">🔒</div>
+    <div class="sc-name">IP &amp; Ownership</div>
+    <div class="sc-risk high">high</div>
+    <div class="sc-tldr">This is a complete IP giveaway. Everything you create — code, designs, documentation, even ideas and inventions — become</div>
+  </div>
+<div class="score-card risk-high">
+    <div class="sc-icon">🚫</div>
+    <div class="sc-name">Non-Compete</div>
+    <div class="sc-risk high">high</div>
+    <div class="sc-tldr">This is the most dangerous clause in the contract. You are banned from working for any business that 'competes with Clie</div>
+  </div>
+<div class="score-card risk-low">
+    <div class="sc-icon">⏰</div>
+    <div class="sc-name">Termination</div>
+    <div class="sc-risk low">low</div>
+    <div class="sc-tldr">This is actually one of the fairer termination clauses you'll see. Either party can end the contract with just 15 days n</div>
+  </div>
+<div class="score-card risk-high">
+    <div class="sc-icon">🛡️</div>
+    <div class="sc-name">Indemnification</div>
+    <div class="sc-risk high">high</div>
+    <div class="sc-tldr">You agree to cover ALL of the client's costs and losses — including their attorney fees — if anything goes wrong. This c</div>
+  </div>
+<div class="score-card risk-medium">
+    <div class="sc-icon">⚖️</div>
+    <div class="sc-name">Liability Caps</div>
+    <div class="sc-risk medium">medium</div>
+    <div class="sc-tldr">On the surface, your liability is capped at what the client paid you in the last 6 months — that's standard and fair. BU</div>
+  </div>
+  </div>
+
+  <!-- DETAILS -->
+  <div class="section-label">Detailed Analysis</div>
+  <div class="zone-detail">
+    <div class="zd-header">
+      <span class="zd-title">💰 Payment Terms</span>
+      <span class="risk-pill medium">MEDIUM</span>
+    </div>
+    <div class="zd-summary">You'll be paid $150/hour, which is good. But invoices are paid net-45 — meaning you wait 45 days after submitting each invoice. For a freelancer billing monthly, you could go nearly 75 days between starting work and getting paid. Late payments do accrue 1% monthly interest, giving you some protection. There's also a 15-day dispute window where payment can be held up.</div>
+    <div class="zd-clauses"><div class="clause-block">
+    <strong>Net-45 Payment Terms</strong>
+    Client shall pay all undisputed invoices within 45 days of receipt.
+  </div><div class="clause-block">
+    <strong>Late Payment Interest</strong>
+    Late payments shall accrue interest at 1% per month.
+  </div></div>
+    <div class="zd-recs">
+    <h4>💡 What to do</h4>
+    <ul><li>Negotiate to net-30 (industry standard) or net-15 — every day matters for cash flow as a freelancer.</li><li>Ask for an upfront deposit (25-30%) before starting work, especially for projects longer than 2 weeks.</li><li>Clarify what makes an invoice 'disputed' — the 15-day window is vague and could be abused to delay payment.</li></ul>
+  </div>
+  </div>
+<div class="zone-detail">
+    <div class="zd-header">
+      <span class="zd-title">🔒 IP &amp; Ownership</span>
+      <span class="risk-pill high">HIGH</span>
+    </div>
+    <div class="zd-summary">This is a complete IP giveaway. Everything you create — code, designs, documentation, even ideas and inventions — becomes the client's sole property. You cannot show any of your work in your portfolio without their written permission. This is unusually restrictive. Most freelancer agreements at least allow portfolio use, and many limit IP assignment to final deliverables only, not all work-in-progress and ideas.</div>
+    <div class="zd-clauses"><div class="clause-block">
+    <strong>Full IP Assignment — Everything You Create</strong>
+    All work product, code, documentation, designs, inventions, and any other materials created by Contractor in connection with the Services shall be the sole and exclusive property of Client. Contractor hereby assigns to Client all right, title, and interest in and to the Work Product, including all intellectual property rights therein.
+  </div><div class="clause-block">
+    <strong>No Portfolio Rights</strong>
+    Contractor retains no rights to use the Work Product for any purpose, including portfolio display, without Client's prior written consent.
+  </div><div class="clause-block">
+    <strong>Duty to Sign Further Documents</strong>
+    Contractor agrees to execute any further documents reasonably requested by Client to perfect such assignment.
+  </div></div>
+    <div class="zd-recs">
+    <h4>💡 What to do</h4>
+    <ul><li>Absolutely negotiate for portfolio rights — at minimum, the right to show anonymized work samples. This is standard in the industry and costs the client nothing.</li><li>Narrow IP assignment to 'final deliverables accepted and paid for by Client' rather than 'any and all materials created in connection with the Services' — this prevents them from claiming ownership of your rough drafts, rejected ideas, or tools you build for yourself.</li><li>Consider retaining ownership of pre-existing materials, tools, and general know-how you bring to the project.</li></ul>
+  </div>
+  </div>
+<div class="zone-detail">
+    <div class="zd-header">
+      <span class="zd-title">🚫 Non-Compete</span>
+      <span class="risk-pill high">HIGH</span>
+    </div>
+    <div class="zd-summary">This is the most dangerous clause in the contract. You are banned from working for any business that 'competes with Client's primary business of enterprise SaaS solutions, anywhere in the United States' for 12 months after this contract ends. 'Enterprise SaaS' is an enormous category — this could block you from working for thousands of companies across the entire country. You also cannot hire or solicit any of the client's employees or contractors for 24 months.</div>
+    <div class="zd-clauses"><div class="clause-block">
+    <strong>12-Month Nationwide Non-Compete</strong>
+    During the term of this Agreement and for a period of 12 months following termination, Contractor shall not, directly or indirectly, provide services that are competitive with the Services to any business that competes with Client's primary business of enterprise SaaS solutions, anywhere in the United States.
+  </div><div class="clause-block">
+    <strong>24-Month Non-Solicitation</strong>
+    Contractor shall not solicit or hire any Client employees or contractors for 24 months following termination.
+  </div></div>
+    <div class="zd-recs">
+    <h4>💡 What to do</h4>
+    <ul><li>Push back hard on this clause — it could prevent you from earning a living for a full year. Ask to remove it entirely or at minimum: (a) narrow 'enterprise SaaS' to the client's specific product category, (b) reduce geographic scope to the client's actual market, (c) reduce duration to 3-6 months.</li><li>Note: if you're in California, non-competes for independent contractors are generally unenforceable. But don't sign it hoping a court will save you — the legal fight itself is expensive.</li><li>The non-solicitation is more reasonable but 24 months is unusually long — push for 12 months, which is the standard.</li></ul>
+  </div>
+  </div>
+<div class="zone-detail">
+    <div class="zd-header">
+      <span class="zd-title">⏰ Termination</span>
+      <span class="risk-pill low">LOW</span>
+    </div>
+    <div class="zd-summary">This is actually one of the fairer termination clauses you'll see. Either party can end the contract with just 15 days notice. If the client fires you without cause, you get a 2-week termination fee as compensation. There's no auto-renewal trap. You get paid for all work completed up to termination. This is freelancer-friendly.</div>
+    <div class="zd-clauses"><div class="clause-block">
+    <strong>Termination Fee for No-Cause Termination</strong>
+    In the event of termination by Client without cause, Client shall pay Contractor a termination fee equal to two weeks of estimated hours at the agreed rate.
+  </div><div class="clause-block">
+    <strong>15-Day Notice Period</strong>
+    Either party may terminate this Agreement at any time, with or without cause, upon 15 days written notice.
+  </div></div>
+    <div class="zd-recs">
+    <h4>💡 What to do</h4>
+    <ul><li>Clarify what 'estimated hours' means for the termination fee — is it based on your average weekly hours over the past month? Or a fixed number? Get this in writing.</li><li>Consider asking for 30 days notice instead of 15 for more runway — 15 days is short if you need to line up your next client.</li><li>No changes needed on the core terms — this is a good clause.</li></ul>
+  </div>
+  </div>
+<div class="zone-detail">
+    <div class="zd-header">
+      <span class="zd-title">🛡️ Indemnification</span>
+      <span class="risk-pill high">HIGH</span>
+    </div>
+    <div class="zd-summary">You agree to cover ALL of the client's costs and losses — including their attorney fees — if anything goes wrong. This covers three things: (1) you breaching the contract (fair), (2) your negligence or misconduct (fair), and (3) any claim that your work infringes someone else's IP. That third one is dangerous — if a patent troll sues the client over something in your code, you pay the client's legal bills AND the settlement. The indemnification is completely one-sided — the client doesn't indemnify you for anything, not even for materials or instructions they provide.</div>
+    <div class="zd-clauses"><div class="clause-block">
+    <strong>One-Sided Indemnification Including IP Claims</strong>
+    Contractor agrees to indemnify, defend, and hold harmless Client, its officers, directors, employees, and agents from and against any and all claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or related to: ... any claim that the Work Product infringes any third-party intellectual property rights.
+  </div></div>
+    <div class="zd-recs">
+    <h4>💡 What to do</h4>
+    <ul><li>Add a 'knowledge qualifier' to the IP indemnity: only indemnify for infringement claims based on code you knowingly copied, not for independent creation that happens to overlap with a patent.</li><li>Make indemnification mutual — the client should indemnify you for things they provide (specs, data, materials, access) that cause problems.</li><li>Consider professional liability (E&amp;O) insurance if you're taking on this kind of risk — it typically costs $50-100/month for freelancers.</li></ul>
+  </div>
+  </div>
+<div class="zone-detail">
+    <div class="zd-header">
+      <span class="zd-title">⚖️ Liability Caps</span>
+      <span class="risk-pill medium">MEDIUM</span>
+    </div>
+    <div class="zd-summary">On the surface, your liability is capped at what the client paid you in the last 6 months — that's standard and fair. BUT there are three gaping exceptions: breaches of confidentiality, indemnification obligations, and IP infringement claims. For those three things, your liability is UNLIMITED. Combined with the broad indemnification clause (which already exposes you to IP claims), this means a single lawsuit could exceed everything you've ever earned from this client — potentially by millions.</div>
+    <div class="zd-clauses"><div class="clause-block">
+    <strong>Uncapped Liability for Key Areas</strong>
+    EXCEPT FOR BREACHES OF CONFIDENTIALITY, INDEMNIFICATION OBLIGATIONS, AND INTELLECTUAL PROPERTY INFRINGEMENT, NEITHER PARTY SHALL BE LIABLE TO THE OTHER FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES.
+  </div><div class="clause-block">
+    <strong>6-Month Fee Cap for Everything Else</strong>
+    CONTRACTOR'S TOTAL AGGREGATE LIABILITY TO CLIENT SHALL NOT EXCEED THE TOTAL FEES RECEIVED BY CONTRACTOR FROM CLIENT IN THE 6 MONTHS PRECEDING THE CLAIM.
+  </div></div>
+    <div class="zd-recs">
+    <h4>💡 What to do</h4>
+    <ul><li>Negotiate a super-cap that covers everything including the exceptions — e.g., 'Contractor's total liability under any theory shall not exceed 2x the total fees paid in the 12 months preceding the claim.' This is a common compromise.</li><li>If the client won't budge on uncapped IP liability, require them to carry IP insurance that names you as an additional insured.</li><li>At an absolute minimum, add a carve-out that says you're not liable for IP claims arising from materials, designs, or instructions provided by the client.</li></ul>
+  </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="report-footer">
+    <p>ContractLens — AI-powered contract analysis</p>
+    <p>This is not legal advice. Consult a lawyer before signing.</p>
+  </div>
+
+</div>
+</body>
+</html>
