@@ -1,0 +1,62 @@
+# Sample Independent Contractor Agreement
+
+This is a sample contract for testing ContractLens analysis.
+
+---
+
+**INDEPENDENT CONTRACTOR AGREEMENT**
+
+This Independent Contractor Agreement ("Agreement") is entered into as of January 15, 2025 ("Effective Date"), by and between Acme Corp, a Delaware corporation ("Client"), and Jane Developer, an individual ("Contractor").
+
+## 1. SERVICES
+
+Contractor agrees to provide software development services as described in Exhibit A (the "Services"). Contractor shall perform Services in a professional and workmanlike manner.
+
+## 2. COMPENSATION
+
+Client shall pay Contractor at a rate of $150 per hour. Contractor shall submit invoices monthly. Client shall pay all undisputed invoices within 45 days of receipt. Any disputed amounts shall be resolved within 15 days. Late payments shall accrue interest at 1% per month.
+
+## 3. INDEPENDENT CONTRACTOR STATUS
+
+Contractor is an independent contractor and not an employee of Client. Contractor is solely responsible for all taxes, insurance, and benefits. Contractor shall not be entitled to workers' compensation, unemployment benefits, or any employee benefits.
+
+## 4. INTELLECTUAL PROPERTY
+
+All work product, code, documentation, designs, inventions, and any other materials created by Contractor in connection with the Services ("Work Product") shall be the sole and exclusive property of Client. Contractor hereby assigns to Client all right, title, and interest in and to the Work Product, including all intellectual property rights therein. Contractor agrees to execute any further documents reasonably requested by Client to perfect such assignment. Contractor retains no rights to use the Work Product for any purpose, including portfolio display, without Client's prior written consent.
+
+## 5. CONFIDENTIALITY
+
+Contractor shall hold all Client confidential information in strict confidence and shall not disclose it to any third party. This obligation survives termination of this Agreement for a period of 5 years.
+
+## 6. NON-COMPETITION
+
+During the term of this Agreement and for a period of 12 months following termination, Contractor shall not, directly or indirectly, provide services that are competitive with the Services to any business that competes with Client's primary business of enterprise SaaS solutions, anywhere in the United States. Contractor shall not solicit or hire any Client employees or contractors for 24 months following termination.
+
+## 7. TERM AND TERMINATION
+
+This Agreement shall commence on the Effective Date and continue until terminated. Either party may terminate this Agreement at any time, with or without cause, upon 15 days written notice. Upon termination, Client shall pay Contractor for all Services performed through the date of termination. In the event of termination by Client without cause, Client shall pay Contractor a termination fee equal to two weeks of estimated hours at the agreed rate.
+
+## 8. INDEMNIFICATION
+
+Contractor agrees to indemnify, defend, and hold harmless Client, its officers, directors, employees, and agents from and against any and all claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or related to: (a) Contractor's breach of this Agreement; (b) Contractor's negligence or willful misconduct; and (c) any claim that the Work Product infringes any third-party intellectual property rights.
+
+## 9. LIMITATION OF LIABILITY
+
+EXCEPT FOR BREACHES OF CONFIDENTIALITY, INDEMNIFICATION OBLIGATIONS, AND INTELLECTUAL PROPERTY INFRINGEMENT, NEITHER PARTY SHALL BE LIABLE TO THE OTHER FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES. CLIENT'S TOTAL AGGREGATE LIABILITY TO CONTRACTOR SHALL NOT EXCEED THE TOTAL FEES PAID BY CLIENT TO CONTRACTOR IN THE 6 MONTHS PRECEDING THE CLAIM. CONTRACTOR'S TOTAL AGGREGATE LIABILITY TO CLIENT SHALL NOT EXCEED THE TOTAL FEES RECEIVED BY CONTRACTOR FROM CLIENT IN THE 6 MONTHS PRECEDING THE CLAIM.
+
+## 10. GOVERNING LAW
+
+This Agreement shall be governed by the laws of the State of Delaware, without regard to its conflict of laws principles. Any dispute arising under this Agreement shall be resolved exclusively in the state or federal courts located in Wilmington, Delaware.
+
+---
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
+
+ACME CORP
+By: ________________________
+Name: John Smith
+Title: CEO
+
+CONTRACTOR
+By: ________________________
+Name: Jane Developer
