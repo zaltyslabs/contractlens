@@ -71,13 +71,30 @@ function showToast(msg, type = 'success') {
 
 // ── Auth state observer ──
 
+let _authReady = false;
+
 supabaseClient.auth.onAuthStateChange((event, session) => {
-  // Only redirect on fresh sign-in (not initial session restore)
-  if (event === 'SIGNED_IN' && !window._authInitialCheck) {
-    window.location.href = '/dashboard.html';
+  // INITIAL_SESSION fires on page load when session exists — do NOT redirect
+  // SIGNED_IN fires on explicit login — redirect to dashboard
+  // SIGNED_OUT fires on logout — redirect to home
+  
+  if (event === 'INITIAL_SESSION') {
+    _authReady = true;
+    return; // Session restored — stay on current page
   }
+  
+  if (event === 'SIGNED_IN') {
+    _authReady = true;
+    // Only redirect to dashboard from non-dashboard pages
+    if (!window.location.pathname.includes('dashboard')) {
+      window.location.href = '/dashboard.html';
+    }
+  }
+  
   if (event === 'SIGNED_OUT') {
-    window.location.href = '/index.html';
+    _authReady = false;
+    if (!window.location.pathname.includes('index.html')) {
+      window.location.href = '/index.html';
+    }
   }
-  window._authInitialCheck = true;
 });

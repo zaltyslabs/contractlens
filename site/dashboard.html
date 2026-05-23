@@ -121,9 +121,16 @@
 <script>
   // ── Auth guard ──
   (async () => {
-    const user = await getUser();
-    if (!user) { window.location.href = '/index.html'; return; }
-    document.getElementById('user-email').textContent = user.email;
+    // Retry session check (Supabase needs a moment to restore)
+    let session = null;
+    for (let i = 0; i < 5; i++) {
+      const { data } = await supabaseClient.auth.getSession();
+      session = data.session;
+      if (session) break;
+      await new Promise(r => setTimeout(r, 300));
+    }
+    if (!session) { window.location.href = '/index.html'; return; }
+    document.getElementById('user-email').textContent = session.user.email;
     loadDashboard();
   })();
 
