@@ -72,25 +72,28 @@ function showToast(msg, type = 'success') {
 // ── Auth state observer ──
 
 let _authReady = false;
+let _pageLoadTime = Date.now();
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
-  // INITIAL_SESSION fires on page load when session exists — do NOT redirect
-  // SIGNED_IN fires on explicit login — redirect to dashboard
-  // SIGNED_OUT fires on logout — redirect to home
-  
+  // Ignore all events during the first 2 seconds (prevents navigation loops)
+  const pageAge = Date.now() - _pageLoadTime;
+  if (pageAge < 2000 && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+    _authReady = !!session;
+    return;
+  }
+
   if (event === 'INITIAL_SESSION') {
     _authReady = true;
-    return; // Session restored — stay on current page
+    return;
   }
-  
+
   if (event === 'SIGNED_IN') {
     _authReady = true;
-    // Only redirect to dashboard from non-dashboard pages
     if (!window.location.pathname.includes('dashboard')) {
       window.location.href = '/dashboard.html';
     }
   }
-  
+
   if (event === 'SIGNED_OUT') {
     _authReady = false;
     if (!window.location.pathname.includes('index.html')) {

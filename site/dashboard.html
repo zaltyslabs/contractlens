@@ -100,7 +100,7 @@
   <div id="upgrade-banner" class="mt-8 border border-brand-500/30 bg-brand-500/5 rounded-xl p-6 text-center">
     <h3 class="font-bold text-white mb-1">Need More Scans?</h3>
     <p class="text-gray-400 text-sm mb-4">Upgrade to Side Hustler ($12/mo) for 5 scans/month or Power Freelancer ($25/mo) for 20.</p>
-    <a href="/#pricing" class="inline-block bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition">View Plans</a>
+    <a href="/index.html#pricing" class="inline-block bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition">View Plans</a>
   </div>
 
 </main>
@@ -249,13 +249,29 @@
   function viewReport(scanId) {
     const scans = JSON.parse(localStorage.getItem('contractlens_scans') || '[]');
     const scan = scans.find(s => s.id === scanId);
-    if (!scan || !scan.reportData) {
-      showToast('Report data not available', 'error');
+    if (!scan) {
+      showToast('Scan not found', 'error');
       return;
     }
 
-    const d = scan.reportData;
     document.getElementById('report-modal-title').textContent = `Report: ${scan.filename}`;
+
+    if (!scan.reportData) {
+      // Old scan without stored report data — show summary
+      document.getElementById('report-modal-body').innerHTML = `
+        <div class="bg-gray-800 rounded-lg p-4 mb-4">
+          <p class="text-white font-medium mb-1">Analysis Complete</p>
+          <p class="text-gray-400">Full report for <strong>${escHtml(scan.filename)}</strong> was delivered via email. </p>
+          <p class="text-gray-500 text-xs mt-2">Risk level: <span class="${scan.risk === 'high' ? 'text-red-400' : scan.risk === 'medium' ? 'text-amber-400' : 'text-green-400'} font-bold uppercase">${scan.risk || 'unknown'}</span></p>
+          <p class="text-gray-500 text-xs mt-1">Date: ${new Date(scan.date).toLocaleDateString()}</p>
+        </div>
+        <p class="text-gray-600 text-xs mt-4 text-center">⚠️ Not legal advice. Check your email for the full report.</p>
+      `;
+      document.getElementById('report-modal').classList.remove('hidden');
+      return;
+    }
+    
+    const d = scan.reportData;
     
     const riskColors = { high: 'text-red-400', medium: 'text-amber-400', low: 'text-green-400' };
     const riskEmoji = { high: '🔴', medium: '🟡', low: '🟢' };
