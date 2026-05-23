@@ -1,0 +1,4 @@
+[functions.stripe-webhook]
+# Allow public access — webhook uses Stripe signature verification
+enabled = true
+verify_jwt = false
