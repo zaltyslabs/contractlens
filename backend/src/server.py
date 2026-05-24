@@ -90,9 +90,13 @@ async def _record_scan(
 
         # Increment monthly usage counter
         try:
-            supabase.table("profiles").update(
-                {"scans_used_this_month": supabase.raw("scans_used_this_month + 1")}
-            ).eq("id", user_id).execute()
+            # Read current value first (avoid race-prone raw SQL until we add an RPC function)
+            profile = supabase.table("profiles").select("scans_used_this_month").eq("id", user_id).maybe_single().execute()
+            if profile.data:
+                current = profile.data.get("scans_used_this_month", 0)
+                supabase.table("profiles").update(
+                    {"scans_used_this_month": current + 1}
+                ).eq("id", user_id).execute()
         except Exception as e:
             print(f"Failed to increment scans_used_this_month: {e}")
 
