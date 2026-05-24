@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 
+const STRIPE_LINKS: Record<string, string> = {
+  "Side Hustler": process.env.NEXT_PUBLIC_STRIPE_SIDE_HUSTLER || "",
+  "Power Freelancer": process.env.NEXT_PUBLIC_STRIPE_POWER_FREELANCER || "",
+  Agency: process.env.NEXT_PUBLIC_STRIPE_AGENCY || "",
+};
+
 const TIERS = [
   {
     name: "Free",
@@ -49,11 +55,6 @@ const btnClass = (variant: "primary" | "outline") =>
       ? "bg-brand-500 hover:bg-brand-600 text-white shadow-lg shadow-brand-500/20"
       : "border border-white/[0.1] text-gray-300 hover:bg-white/[0.04]"
   }`;
-
-function handleStripeClick() {
-  console.warn("Stripe checkout not yet configured");
-  alert("Paid plans coming soon! Email us at support@contractlens.io to get early access.");
-}
 
 export default function Pricing() {
   return (
@@ -103,9 +104,19 @@ export default function Pricing() {
                 {t.cta}
               </Link>
             ) : (
-              <button onClick={handleStripeClick} className={btnClass(t.variant)}>
+              <a
+                href={STRIPE_LINKS[t.name] || "#"}
+                className={btnClass(t.variant)}
+                onClick={(e) => {
+                  if (!STRIPE_LINKS[t.name]) {
+                    e.preventDefault();
+                    alert("Payment link not configured yet.");
+                    return;
+                  }
+                }}
+              >
                 {t.cta}
-              </button>
+              </a>
             )}
             {t.price > 0 && (
               <div className="text-[11px] text-gray-600 text-center mt-3">
