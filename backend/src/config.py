@@ -38,4 +38,4 @@ DANGER_ZONES = [
     "liability_caps",
 ]
 
-MAX_CONTRACT_CHARS = 40_000  # ~10K tokens; leaves ample output budget for LLM
+MAX_CONTRACT_CHARS = 80_000  # ~20K tokens; generous for most contracts while leaving output budget
