@@ -31,7 +31,7 @@ LLM_API_KEY = os.getenv(
 )
 LLM_MODEL_NAME = os.getenv("LLM_MODEL", LLM_MODEL)
 LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "120"))
-LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "16384"))
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "8192"))
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.3"))
 
 # Providers that natively support response_format: json_object

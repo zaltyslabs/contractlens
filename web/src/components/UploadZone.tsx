@@ -7,9 +7,10 @@ import { uploadContract } from "@/lib/api";
 interface Props {
   onComplete: () => void;
   email?: string;
+  userId?: string;
 }
 
-export default function UploadZone({ onComplete, email }: Props) {
+export default function UploadZone({ onComplete, email, userId }: Props) {
   const [dragover, setDragover] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState("");
@@ -39,7 +40,7 @@ export default function UploadZone({ onComplete, email }: Props) {
         if (i < steps.length) setStatus(steps[i]);
       }, 2000);
 
-      const result = await uploadContract(file, email || "");
+      const result = await uploadContract(file, email || "", userId);
 
       clearInterval(interval);
       setStatus("Analysis complete!");
