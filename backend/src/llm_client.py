@@ -31,7 +31,7 @@ LLM_API_KEY = os.getenv(
 )
 LLM_MODEL_NAME = os.getenv("LLM_MODEL", LLM_MODEL)
 LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "120"))
-LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "8192"))
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "16384"))
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.3"))
 
 # Providers that natively support response_format: json_object
@@ -84,6 +84,7 @@ async def analyze_contract(contract_text: str) -> dict:
         payload["response_format"] = {"type": "json_object"}
 
     print(f"Calling {LLM_MODEL_NAME} via {LLM_BASE_URL}...")
+    print(f"  max_tokens={LLM_MAX_TOKENS} temperature={LLM_TEMPERATURE} timeout={LLM_TIMEOUT}s")
 
     try:
         async with httpx.AsyncClient(timeout=LLM_TIMEOUT) as client:

@@ -218,6 +218,7 @@ async def _process_upload(
             if isinstance(data, dict)
         },
         "report_url": str(report_path),
+        "report_html": html,
         "recommendations": analysis.get("recommendations", []),
         "emailed": emailed,
         "metadata": {

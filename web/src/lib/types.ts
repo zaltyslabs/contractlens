@@ -8,6 +8,7 @@ export interface UploadResponse {
   risk: "low" | "medium" | "high";
   zones: Record<string, ContractZone>;
   report_url: string;
+  report_html?: string;
   recommendations: string[];
   emailed: boolean;
   metadata: {

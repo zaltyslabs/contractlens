@@ -74,7 +74,7 @@ export default function DashboardPage() {
 
         {/* Main */}
         <main className="flex flex-col gap-6">
-          <UploadZone onComplete={handleUploadComplete} />
+          <UploadZone onComplete={handleUploadComplete} email={user?.email || ""} />
           <ScanHistory scans={scans} />
         </main>
       </div>

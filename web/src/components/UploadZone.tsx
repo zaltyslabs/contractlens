@@ -6,9 +6,10 @@ import { uploadContract } from "@/lib/api";
 
 interface Props {
   onComplete: () => void;
+  email?: string;
 }
 
-export default function UploadZone({ onComplete }: Props) {
+export default function UploadZone({ onComplete, email }: Props) {
   const [dragover, setDragover] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState("");
@@ -38,10 +39,26 @@ export default function UploadZone({ onComplete }: Props) {
         if (i < steps.length) setStatus(steps[i]);
       }, 2000);
 
-      const result = await uploadContract(file, "user@contractlens.io");
+      const result = await uploadContract(file, email || "");
 
       clearInterval(interval);
       setStatus("Analysis complete!");
+
+      // Save to localStorage so ScanHistory can display it
+      const scanRecord = {
+        id: crypto.randomUUID?.() || Date.now().toString(),
+        filename: file.name,
+        date: new Date().toISOString(),
+        risk: result.risk,
+        status: "done" as const,
+        reportData: result,
+      };
+      const stored = JSON.parse(
+        localStorage.getItem("contractlens_scans") || "[]"
+      );
+      stored.unshift(scanRecord);
+      localStorage.setItem("contractlens_scans", JSON.stringify(stored));
+
       onComplete();
     } catch (err) {
       setStatus("");
