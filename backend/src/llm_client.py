@@ -31,7 +31,7 @@ LLM_API_KEY = os.getenv(
 )
 LLM_MODEL_NAME = os.getenv("LLM_MODEL", LLM_MODEL)
 LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "120"))
-LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "4096"))
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "8192"))
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.3"))
 
 # Providers that natively support response_format: json_object
@@ -49,7 +49,8 @@ async def analyze_contract(contract_text: str) -> dict:
     Works with any OpenAI-compatible chat completions API.
 
     Returns:
-        Parsed analysis dict with 6 danger zones.
+        Parsed analysis dict with 6 danger zones. May include metadata
+        fields: _truncated (bool), _warning (str), _repaired (bool).
 
     Raises:
         ValueError: If LLM_API_KEY is not configured.
@@ -107,14 +108,28 @@ async def analyze_contract(contract_text: str) -> dict:
 
     data = response.json()
     content = data["choices"][0]["message"]["content"]
-    return _parse_llm_json(content)
+    finish_reason = data["choices"][0].get("finish_reason", "")
+
+    result = _parse_llm_json(content)
+
+    # Warn if the API truncated the response
+    if finish_reason == "length":
+        result["_truncated"] = True
+        result["_warning"] = (
+            "Response was truncated by token limit. "
+            "Some analysis may be incomplete. "
+            "Consider reducing contract length or increasing LLM_MAX_TOKENS "
+            f"(currently {LLM_MAX_TOKENS})."
+        )
+
+    return result
 
 
 def _parse_llm_json(raw: str) -> dict:
     """Parse LLM response with multiple fallback strategies.
 
     Handles: markdown code fences, greedy regex, unescaped control chars,
-    and common LLM output quirks.
+    truncated JSON repair, and common LLM output quirks.
     """
     text = raw.strip()
 
@@ -161,7 +176,138 @@ def _parse_llm_json(raw: str) -> dict:
         except json.JSONDecodeError:
             pass
 
+    # Strategy 6: JSON repair for truncated output
+    repaired = _repair_truncated_json(text)
+    if repaired is not None:
+        repaired["_repaired"] = True
+        return repaired
+
     raise ValueError(
-        f"Failed to parse LLM response as JSON after 5 strategies. "
+        "Failed to parse LLM response as JSON after 6 strategies. "
+        "The LLM response may have been truncated due to token limits. "
+        f"Try reducing contract length or increasing LLM_MAX_TOKENS "
+        f"(currently {LLM_MAX_TOKENS}). "
         f"Response preview: {text[:300]}..."
     )
+
+
+def _repair_truncated_json(text: str) -> dict | None:
+    """Attempt to repair truncated JSON by closing unclosed structures.
+
+    When the LLM response is cut off mid-generation, this function
+    tries to salvage as much valid JSON as possible by:
+    1. Finding the last complete value boundary
+    2. Closing any unclosed strings, arrays, and objects
+    3. Trying progressively shorter truncations
+
+    Returns parsed dict on success, None on failure.
+    """
+    start = text.find("{")
+    if start < 0:
+        return None
+
+    # Approach: find the last "safe" position — a comma or colon that
+    # represents a complete key:value boundary. Then truncate there,
+    # close any unclosed strings/arrays/objects, and try to parse.
+
+    brace_depth = 0
+    bracket_depth = 0
+    in_string = False
+    escape_next = False
+    last_safe = start  # Always at least keep the opening brace
+
+    for i in range(start, len(text)):
+        ch = text[i]
+
+        if escape_next:
+            escape_next = False
+            continue
+
+        if ch == "\\" and in_string:
+            escape_next = True
+            continue
+
+        if ch == '"' and not escape_next:
+            in_string = not in_string
+            # If we just closed a string, mark as safe
+            if not in_string:
+                last_safe = i + 1
+            continue
+
+        if in_string:
+            continue
+
+        if ch == "{":
+            brace_depth += 1
+        elif ch == "}":
+            brace_depth -= 1
+            if brace_depth >= 0:
+                last_safe = i + 1
+        elif ch == "[":
+            bracket_depth += 1
+        elif ch == "]":
+            bracket_depth -= 1
+            if bracket_depth >= 0:
+                last_safe = i + 1
+        elif ch == "," and brace_depth > 0 and bracket_depth == 0:
+            # Comma separating object keys — safe truncation point
+            # (but only at top level of current brace depth, not inside nested arrays)
+            last_safe = i
+        elif ch in ("t", "f", "n", "-") and brace_depth > 0:
+            # Could be start of true/false/null/number — mark previous safe
+            pass
+
+    # Build repaired JSON by truncating at last safe position, then
+    # closing any remaining open structures
+    truncated = text[start:last_safe]
+
+    # In case last_safe was at a comma, strip the trailing comma
+    truncated = truncated.rstrip()
+
+    # Close any unclosed structures
+    if in_string:
+        truncated += '"'
+
+    truncated += "]" * max(0, bracket_depth)
+    truncated += "}" * max(0, brace_depth)
+
+    # Try parsing
+    try:
+        return json.loads(truncated)
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback: try removing more aggressively — strip back to last comma
+    # and try again with clean closure
+    last_comma = truncated.rfind(",")
+    if last_comma > 0:
+        shorter = truncated[:last_comma].rstrip()
+        if in_string:
+            shorter += '"'
+        shorter += "]" * max(0, bracket_depth)
+        shorter += "}" * max(0, brace_depth)
+
+        try:
+            return json.loads(shorter)
+        except json.JSONDecodeError:
+            pass
+
+    # Last resort: just try closing from the original text start
+    # without any smart truncation
+    raw_from_start = text[start:]
+    # Close string if needed
+    if in_string:
+        raw_from_start += '"'
+    # Try to find and strip trailing garbage
+    last_brace = raw_from_start.rfind("}")
+    if last_brace >= 0:
+        raw_from_start = raw_from_start[:last_brace + 1]
+    raw_from_start += "]" * max(0, bracket_depth)
+    raw_from_start += "}" * max(0, brace_depth)
+
+    try:
+        return json.loads(raw_from_start)
+    except json.JSONDecodeError:
+        pass
+
+    return None

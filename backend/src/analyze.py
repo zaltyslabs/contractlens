@@ -11,6 +11,7 @@ When running standalone: use the CLI via pipeline.py.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -58,6 +59,11 @@ def parse_analysis_response(response: str) -> dict:
     """Parse the LLM's JSON response into a structured dict.
 
     Handles cases where the LLM wraps JSON in markdown code blocks.
+
+    Raises:
+        ValueError: If the response cannot be parsed as JSON.
+            This often happens when the LLM response was truncated
+            due to token limits.
     """
     # Strip markdown code fences if present
     text = response.strip()
@@ -74,7 +80,6 @@ def parse_analysis_response(response: str) -> dict:
         return json.loads(text)
     except json.JSONDecodeError:
         # Try to extract JSON object from the response
-        import re
         match = re.search(r"\{.*\}", text, re.DOTALL)
         if match:
             try:
@@ -83,7 +88,9 @@ def parse_analysis_response(response: str) -> dict:
                 pass
         raise ValueError(
             "Failed to parse LLM response as JSON. "
-            f"Response preview: {text[:200]}..."
+            "The response may have been truncated due to token limits. "
+            "Try reducing contract length or increasing LLM_MAX_TOKENS. "
+            f"Response preview: {text[:300]}..."
         )
 
 
@@ -120,6 +127,19 @@ def validate_analysis(analysis: dict) -> list[str]:
 def format_analysis_for_display(analysis: dict) -> str:
     """Format the analysis as a readable text summary (for CLI output)."""
     lines = []
+
+    # Show warnings about truncation or JSON repair
+    if analysis.get("_truncated"):
+        lines.append("⚠️  WARNING: Response was truncated by token limit.")
+        if analysis.get("_warning"):
+            lines.append(f"   {analysis['_warning']}")
+        lines.append("")
+
+    if analysis.get("_repaired"):
+        lines.append("🔧 NOTE: This analysis was recovered from a partial JSON response.")
+        lines.append("   Some zones may be incomplete.")
+        lines.append("")
+
     zone_names = {
         "payment_terms": "💰 Payment Terms",
         "ip_ownership": "🔒 IP & Ownership",

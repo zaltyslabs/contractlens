@@ -38,4 +38,4 @@ DANGER_ZONES = [
     "liability_caps",
 ]
 
-MAX_CONTRACT_CHARS = 100_000  # ~25 pages
+MAX_CONTRACT_CHARS = 40_000  # ~10K tokens; leaves ample output budget for LLM
