@@ -33,3 +33,29 @@ export async function healthCheck(): Promise<{
   const res = await fetch(`${API_URL}/api/health`);
   return res.json();
 }
+
+export interface UsageResponse {
+  scans_used_this_month: number;
+  scans_limit: number;
+  subscription_tier: string;
+  can_scan: boolean;
+}
+
+export async function getUsage(
+  userId: string
+): Promise<UsageResponse> {
+  try {
+    const res = await fetch(
+      `${API_URL}/api/usage?user_id=${encodeURIComponent(userId)}`
+    );
+    if (!res.ok) throw new Error("Usage fetch failed");
+    return res.json();
+  } catch {
+    return {
+      scans_used_this_month: 0,
+      scans_limit: 1,
+      subscription_tier: "free",
+      can_scan: true,
+    };
+  }
+}

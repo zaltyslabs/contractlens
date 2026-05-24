@@ -8,9 +8,11 @@ interface Props {
   onComplete: () => void;
   email?: string;
   userId?: string;
+  canScan?: boolean;
+  scansRemaining?: number;
 }
 
-export default function UploadZone({ onComplete, email, userId }: Props) {
+export default function UploadZone({ onComplete, email, userId, canScan = true, scansRemaining }: Props) {
   const [dragover, setDragover] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState("");
@@ -28,7 +30,6 @@ export default function UploadZone({ onComplete, email, userId }: Props) {
       "Extracting text…",
       "Checking 6 danger zones…",
       "Generating report…",
-      "Sending to your email…",
     ];
 
     try {
@@ -71,7 +72,30 @@ export default function UploadZone({ onComplete, email, userId }: Props) {
 
   return (
     <div>
-      {!uploading && (
+      {/* Plan limit reached — upsell */}
+      {!uploading && canScan === false && (
+        <div className="bg-surface border border-amber-500/20 rounded-2xl p-8 text-center">
+          <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+              <path d="M12 9v4" />
+              <path d="M12 17h.01" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-white mb-2">Monthly limit reached</h3>
+          <p className="text-sm text-gray-400 mb-5 max-w-sm mx-auto">
+            You've used all your scans this month. Upgrade your plan to get more scans and unlock advanced features.
+          </p>
+          <a
+            href="/?scroll=pricing"
+            className="inline-block px-6 py-2.5 rounded-lg text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white transition shadow-lg shadow-brand-500/20"
+          >
+            Upgrade plan
+          </a>
+        </div>
+      )}
+
+      {!uploading && canScan !== false && (
         <div
           className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition ${
             dragover
@@ -104,6 +128,18 @@ export default function UploadZone({ onComplete, email, userId }: Props) {
             onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
           />
           <p className="text-xs text-gray-600 mt-4">Max 20MB · Files are securely deleted after processing</p>
+        </div>
+      )}
+
+      {/* Low scans remaining warning */}
+      {!uploading && canScan !== false && scansRemaining !== undefined && scansRemaining <= 2 && (
+        <div className="mt-3 flex items-center gap-2 text-xs text-amber-400 bg-amber-500/[0.06] border border-amber-500/15 rounded-lg px-3 py-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+          </svg>
+          <span>{scansRemaining} scan{scansRemaining !== 1 ? "s" : ""} remaining this month</span>
         </div>
       )}
 

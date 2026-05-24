@@ -13,9 +13,10 @@ from __future__ import annotations
 import os
 import traceback
 from pathlib import Path
+from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from .analyze import validate_analysis
@@ -85,7 +86,17 @@ async def _record_scan(
 
     try:
         result = supabase.table("scans").insert(row).execute()
-        return result.data[0]["id"] if result.data else None
+        scan_id = result.data[0]["id"] if result.data else None
+
+        # Increment monthly usage counter
+        try:
+            supabase.table("profiles").update(
+                {"scans_used_this_month": supabase.raw("scans_used_this_month + 1")}
+            ).eq("id", user_id).execute()
+        except Exception as e:
+            print(f"Failed to increment scans_used_this_month: {e}")
+
+        return scan_id
     except Exception as e:
         print(f"Supabase record_scan failed: {e}")
         return None
@@ -96,6 +107,60 @@ async def _record_scan(
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "version": "0.2.0"}
+
+
+@app.get("/api/usage")
+async def get_usage(user_id: str = Query(..., description="Supabase user UUID")):
+    """Return current usage for a user. Falls back to scans table if profiles missing."""
+    supabase = _get_supabase()
+
+    # Try profiles table first
+    try:
+        if supabase:
+            profile = supabase.table("profiles").select(
+                "scans_used_this_month, scans_limit, subscription_tier"
+            ).eq("id", user_id).maybe_single().execute()
+
+            if profile.data:
+                p = profile.data
+                return {
+                    "scans_used_this_month": p.get("scans_used_this_month", 0),
+                    "scans_limit": p.get("scans_limit", 1),
+                    "subscription_tier": p.get("subscription_tier", "free"),
+                    "can_scan": p.get("scans_used_this_month", 0) < p.get("scans_limit", 1),
+                }
+    except Exception as e:
+        print(f"Profiles lookup failed, falling back to scans count: {e}")
+
+    # Fallback: count scans this month from scans table
+    try:
+        if supabase:
+            now = datetime.now(timezone.utc)
+            start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            count_result = (
+                supabase.table("scans")
+                .select("id", count="exact")
+                .eq("user_id", user_id)
+                .gte("created_at", start_of_month.isoformat())
+                .execute()
+            )
+            count = count_result.count if count_result.count is not None else 0
+            return {
+                "scans_used_this_month": count,
+                "scans_limit": 1,
+                "subscription_tier": "free",
+                "can_scan": count < 1,
+            }
+    except Exception as e:
+        print(f"Scans fallback failed: {e}")
+
+    # Ultimate fallback
+    return {
+        "scans_used_this_month": 0,
+        "scans_limit": 1,
+        "subscription_tier": "free",
+        "can_scan": True,
+    }
 
 
 @app.post("/api/upload")
@@ -124,6 +189,33 @@ async def upload_contract(
         raise HTTPException(400, "File is empty")
     if len(content) > 20 * 1024 * 1024:
         raise HTTPException(400, "File too large (max 20 MB)")
+
+    # Check usage limit if user is authenticated
+    if user_id:
+        supabase = _get_supabase()
+        if supabase:
+            try:
+                profile = supabase.table("profiles").select(
+                    "scans_used_this_month, scans_limit, subscription_tier"
+                ).eq("id", user_id).maybe_single().execute()
+                if profile.data:
+                    p = profile.data
+                    used = p.get("scans_used_this_month", 0)
+                    limit = p.get("scans_limit", 1)
+                    if used >= limit:
+                        raise HTTPException(
+                            402,
+                            {
+                                "error": "plan_limit_reached",
+                                "message": f"You've used {used}/{limit} scans this month. Upgrade your plan to continue.",
+                                "current_tier": p.get("subscription_tier", "free"),
+                                "upgrade_tiers": ["side_hustler", "power_freelancer", "agency"],
+                            },
+                        )
+            except HTTPException:
+                raise
+            except Exception as e:
+                print(f"Usage check failed (allowing scan): {e}")
 
     UPLOAD_DIR.mkdir(exist_ok=True)
     tmp_path = UPLOAD_DIR / f"{os.urandom(8).hex()}_{file.filename}"

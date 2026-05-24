@@ -1,9 +1,9 @@
-import { Upload, Search, Mail } from "lucide-react";
+import { Upload, Search, Monitor } from "lucide-react";
 
 const STEPS = [
   { icon: Upload, title: "Upload", desc: "Drop your PDF, DOCX, or TXT file. We extract the text locally and securely." },
   { icon: Search, title: "Analyze", desc: "Our AI reads every clause across 6 danger zones. Plain English, no legalese." },
-  { icon: Mail, title: "Get Report", desc: "A beautiful, color-coded report lands in your inbox. Ready in minutes." },
+  { icon: Monitor, title: "View Report", desc: "Your report appears instantly. Interactive, color-coded, ready to act on." },
 ];
 
 export default function Pipeline() {
