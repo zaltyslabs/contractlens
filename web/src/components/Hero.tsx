@@ -29,7 +29,7 @@ export default function Hero() {
         </p>
         <div className="flex gap-3 flex-wrap items-center">
           <Link
-            href="/dashboard"
+            href="/dashboard?signup=true"
             className="px-6 py-3 rounded-xl text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 transition shadow-lg shadow-brand-500/20"
           >
             Analyze a contract free

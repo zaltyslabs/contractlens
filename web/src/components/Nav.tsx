@@ -35,7 +35,7 @@ export default function Nav() {
             </>
           ) : (
             <Link
-              href="/dashboard"
+              href="/dashboard?signup=true"
               className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 transition"
             >
               Get Started Free
@@ -73,7 +73,7 @@ export default function Nav() {
             </>
           ) : (
             <Link
-              href="/dashboard"
+              href="/dashboard?signup=true"
               className="text-sm font-semibold text-brand-500 py-2"
               onClick={() => setMobileOpen(false)}
             >

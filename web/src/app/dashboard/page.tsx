@@ -16,7 +16,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/");
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("signup") === "true") {
+        router.push("/?auth=signup");
+      } else {
+        router.push("/");
+      }
     }
   }, [user, loading, router]);
 
@@ -58,7 +63,10 @@ export default function DashboardPage() {
           <div className="bg-surface border border-white/[0.07] rounded-xl p-5">
             <div className="text-sm font-bold text-white mb-1">Side Hustler</div>
             <div className="text-xs text-gray-500 mb-3">5 scans/month</div>
-            <button className="w-full py-2 rounded-lg text-xs font-semibold border border-white/[0.1] text-gray-300 hover:bg-white/[0.04] transition">
+            <button
+              onClick={() => router.push("/?scroll=pricing")}
+              className="w-full py-2 rounded-lg text-xs font-semibold border border-white/[0.1] text-gray-300 hover:bg-white/[0.04] transition"
+            >
               Upgrade plan
             </button>
           </div>

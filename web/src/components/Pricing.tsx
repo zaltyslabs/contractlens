@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
+
 const TIERS = [
   {
     name: "Free",
     price: 0,
+    scansCount: 1,
     scans: "1 scan, ever",
     features: ["Full 6-zone analysis", "Risk levels per zone", "HTML report by email", "Key clause quotes"],
     cta: "Try free scan",
@@ -13,6 +16,7 @@ const TIERS = [
   {
     name: "Side Hustler",
     price: 12,
+    scansCount: 5,
     scans: "5 scans per month",
     features: ["Everything in Free", "Scan history & dashboard", "Priority processing"],
     cta: "Subscribe — $12/mo",
@@ -22,6 +26,7 @@ const TIERS = [
   {
     name: "Power Freelancer",
     price: 25,
+    scansCount: 20,
     scans: "20 scans per month",
     features: ["Everything in Side Hustler", "Redline suggestions", "Compare mode", "Contract templates"],
     cta: "Subscribe — $25/mo",
@@ -30,12 +35,25 @@ const TIERS = [
   {
     name: "Agency",
     price: 49,
+    scansCount: 50,
     scans: "50 scans per month",
     features: ["Everything in Power", "Team members (up to 5)", "Bulk upload", "Export to PDF/CSV"],
     cta: "Subscribe — $49/mo",
     variant: "outline" as const,
   },
 ];
+
+const btnClass = (variant: "primary" | "outline") =>
+  `w-full py-2.5 rounded-lg text-sm font-semibold transition text-center block ${
+    variant === "primary"
+      ? "bg-brand-500 hover:bg-brand-600 text-white shadow-lg shadow-brand-500/20"
+      : "border border-white/[0.1] text-gray-300 hover:bg-white/[0.04]"
+  }`;
+
+function handleStripeClick() {
+  console.warn("Stripe checkout not yet configured");
+  alert("Paid plans coming soon! Email us at support@contractlens.io to get early access.");
+}
 
 export default function Pricing() {
   return (
@@ -80,18 +98,18 @@ export default function Pricing() {
                 </li>
               ))}
             </ul>
-            <button
-              className={`w-full py-2.5 rounded-lg text-sm font-semibold transition ${
-                t.variant === "primary"
-                  ? "bg-brand-500 hover:bg-brand-600 text-white shadow-lg shadow-brand-500/20"
-                  : "border border-white/[0.1] text-gray-300 hover:bg-white/[0.04]"
-              }`}
-            >
-              {t.cta}
-            </button>
+            {t.href ? (
+              <Link href={t.href} className={btnClass(t.variant)}>
+                {t.cta}
+              </Link>
+            ) : (
+              <button onClick={handleStripeClick} className={btnClass(t.variant)}>
+                {t.cta}
+              </button>
+            )}
             {t.price > 0 && (
               <div className="text-[11px] text-gray-600 text-center mt-3">
-                ${(t.price / parseInt(t.scans)).toFixed(2)} per scan
+                ${(t.price / t.scansCount).toFixed(2)} per scan
               </div>
             )}
           </div>
