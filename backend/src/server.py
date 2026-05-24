@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .analyze import validate_analysis
 from .config import MAX_CONTRACT_CHARS, OUTPUT_DIR, UPLOAD_DIR
-from .emailer import send_report_email
+from .emailer import send_report_email  # available for future re-enable
 from .extract import extract_text, get_contract_metadata
 from .llm_client import analyze_contract
 from .report import _compute_overall_risk, generate_html_report, save_report
@@ -182,13 +182,9 @@ async def _process_upload(
     report_path = save_report(html, OUTPUT_DIR)
     print(f"Report saved: {report_path}")
 
-    # 9. Email delivery (non-fatal failure)
+    # 9. Email delivery (disabled — Render free tier blocks SMTP)
+    # Reports are returned directly to the frontend via report_html.
     emailed = False
-    try:
-        send_report_email(email, html, metadata)
-        emailed = True
-    except Exception as e:
-        print(f"Email failed (non-fatal): {e}")
 
     # 10. Compute overall risk
     overall_risk = _compute_overall_risk(analysis)
